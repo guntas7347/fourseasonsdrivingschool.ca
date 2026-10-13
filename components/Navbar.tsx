@@ -55,6 +55,12 @@ export default function Navbar() {
             Why Choose Us
           </Link>
           <Link
+            href="/gallery"
+            className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-950"
+          >
+            Gallery
+          </Link>
+          <Link
             href="#faqs"
             className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-950"
           >
@@ -65,17 +71,17 @@ export default function Navbar() {
         {/* CTA Actions */}
         <div className="hidden items-center gap-4 sm:flex">
           <a
-            href="tel:+16045550199"
+            href="tel:+16045053129"
             className="flex items-center gap-2 text-sm font-semibold text-zinc-800 transition-colors hover:text-emerald-700"
           >
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100">
               <Phone className="h-4 w-4 text-zinc-700" />
             </div>
-            <span>(604) 555-0199</span>
+            <span>+1 604-505-3129</span>
           </a>
 
           <a
-            href="#register"
+            href="/#register"
             onClick={scrollToRegistration}
             className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-zinc-800 hover:shadow-md active:scale-95"
           >
@@ -87,7 +93,7 @@ export default function Navbar() {
         {/* Mobile menu button */}
         <div className="flex items-center gap-2 md:hidden">
           <a
-            href="#register"
+            href="/#register"
             onClick={scrollToRegistration}
             className="rounded-lg bg-zinc-900 px-3 py-2 text-xs font-semibold text-white"
           >
@@ -99,7 +105,11 @@ export default function Navbar() {
             className="inline-flex items-center justify-center rounded-lg p-2 text-zinc-700 hover:bg-zinc-100 focus:outline-none"
             aria-label="Toggle navigation menu"
           >
-            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {mobileMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
           </button>
         </div>
       </div>
@@ -130,6 +140,13 @@ export default function Navbar() {
               Why Choose Us
             </Link>
             <Link
+              href="/gallery"
+              onClick={() => setMobileMenuOpen(false)}
+              className="rounded-lg px-3 py-2 text-base font-medium text-zinc-800 hover:bg-zinc-50"
+            >
+              Photo Gallery
+            </Link>
+            <Link
               href="#faqs"
               onClick={() => setMobileMenuOpen(false)}
               className="rounded-lg px-3 py-2 text-base font-medium text-zinc-800 hover:bg-zinc-50"
@@ -138,14 +155,14 @@ export default function Navbar() {
             </Link>
             <div className="mt-2 border-t border-zinc-100 pt-3 flex flex-col gap-3">
               <a
-                href="tel:+16045550199"
+                href="tel:+16045053129"
                 className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-zinc-800"
               >
                 <Phone className="h-4 w-4 text-emerald-600" />
-                <span>Call (604) 555-0199</span>
+                <span>Call +1 604-505-3129</span>
               </a>
               <a
-                href="#register"
+                href="/#register"
                 onClick={scrollToRegistration}
                 className="flex items-center justify-center gap-2 rounded-xl bg-zinc-900 py-3 text-center text-sm font-medium text-white shadow"
               >

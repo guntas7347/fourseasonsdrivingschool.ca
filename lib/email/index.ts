@@ -78,8 +78,9 @@ IMPORTANT REMINDERS:
 - Wear comfortable flat footwear (no flip-flops or open sandals).
 
 Need assistance?
-Phone: (604) 555-0199 | (604) 724-4588
-Email: info@fourseasonsdrivingschool.ca
+Phone: +1 604-505-3129
+Email: fsdriving84@gmail.com
+Address: 5805 140A Pl, Surrey, BC V3X 2S1, Canada
 Website: https://fourseasonsdrivingschool.ca
 
 Drive with confidence,
@@ -114,7 +115,7 @@ Date:              ${data.date}
 Time Slot:         ${data.time}
 Lesson / Slot Type:${data.slotType || "Standard 90-Min Lesson"}
 Total Fee:         ${data.price || "$110 CAD"}
-Instructor:        ${data.instructor || "Gary S. (Senior ICBC Instructor)"}
+Instructor:        ${data.instructor || "Chief ICBC Certified Instructor"}
 Student Name:      ${data.customerName}
 Phone Number:      ${data.phone}
 Email Address:     ${data.email}
@@ -130,11 +131,11 @@ PRE-LESSON CHECKLIST:
 CANCELLATION & RESCHEDULING:
 --------------------------------------------------------------------------------
 If you need to change your appointment, please contact us at least 24 hours
-in advance at (604) 555-0199 so we can accommodate other students.
+in advance at +1 604-505-3129 or fsdriving84@gmail.com so we can accommodate other students.
 
 Safe driving,
 Four Seasons Driving School Team
-Surrey, BC
+5805 140A Pl, Surrey, BC V3X 2S1, Canada
 ================================================================================
 `.trim();
 

@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { createPackageAction } from "@/lib/actions/packages";
 import { useForm } from "@/lib/useForm";
 import {
@@ -89,8 +88,7 @@ export default function AdminNewPackagePage() {
   };
 
   return (
-    <AdminLayout>
-      <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6">
         {/* Navigation back */}
         <Link
           href="/admin/packages"
@@ -307,6 +305,5 @@ export default function AdminNewPackagePage() {
           </div>
         </form>
       </div>
-    </AdminLayout>
   );
 }

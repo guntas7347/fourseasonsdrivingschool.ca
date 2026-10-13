@@ -1,12 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import {
   getAuthConfigAction,
   addAllowedGmailAction,
   removeAllowedGmailAction,
 } from "@/lib/actions/config";
+import {
+  getGoogleReviewsMetaAction,
+  syncGoogleReviewsAction,
+} from "@/lib/googleReviews";
 import { useForm } from "@/lib/useForm";
 import { auth } from "@/lib/firebase/googleLogin";
 import {
@@ -19,6 +22,9 @@ import {
   Loader2,
   ShieldAlert,
   UserCheck,
+  RefreshCw,
+  Star,
+  Clock,
 } from "lucide-react";
 
 interface AddEmailFormFields {
@@ -27,8 +33,15 @@ interface AddEmailFormFields {
 
 export default function AdminConfigPage() {
   const [allowedGmails, setAllowedGmails] = useState<string[]>([]);
+  const [reviewsMeta, setReviewsMeta] = useState<{
+    lastUpdated: string | null;
+    count: number;
+    isStale: boolean;
+    daysSinceUpdate: number;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [syncingReviews, setSyncingReviews] = useState(false);
   const [removingEmail, setRemovingEmail] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
@@ -42,8 +55,12 @@ export default function AdminConfigPage() {
   const loadConfig = async () => {
     try {
       setLoading(true);
-      const config = await getAuthConfigAction();
+      const [config, meta] = await Promise.all([
+        getAuthConfigAction(),
+        getGoogleReviewsMetaAction(),
+      ]);
       setAllowedGmails(config.allowedGmails || []);
+      setReviewsMeta(meta);
     } catch (err) {
       console.error("Failed to load auth config:", err);
     } finally {
@@ -54,6 +71,35 @@ export default function AdminConfigPage() {
   useEffect(() => {
     loadConfig();
   }, []);
+
+  const handleSyncReviews = async () => {
+    try {
+      setSyncingReviews(true);
+      setFeedback(null);
+      const res = await syncGoogleReviewsAction(true);
+      if (res.success) {
+        const meta = await getGoogleReviewsMetaAction();
+        setReviewsMeta(meta);
+        setFeedback({
+          type: "success",
+          message: `Synchronized ${res.count} Google Reviews to Firestore (source: ${res.source}).`,
+        });
+      } else {
+        setFeedback({
+          type: "error",
+          message: "Failed to sync Google reviews.",
+        });
+      }
+    } catch (err: any) {
+      console.error("Error syncing reviews:", err);
+      setFeedback({
+        type: "error",
+        message: err?.message || "An error occurred while syncing Google reviews.",
+      });
+    } finally {
+      setSyncingReviews(false);
+    }
+  };
 
   const handleAddEmail = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,8 +177,7 @@ export default function AdminConfigPage() {
   };
 
   return (
-    <AdminLayout>
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
@@ -285,7 +330,101 @@ export default function AdminConfigPage() {
             </p>
           </div>
         </div>
+
+        {/* GOOGLE REVIEWS FIRESTORE CACHE & CRON CONFIG */}
+        <div className="rounded-2xl border border-zinc-200 bg-white p-6 sm:p-7 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 pb-5">
+            <div>
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4 text-amber-500 fill-amber-400" />
+                <h2 className="text-base font-bold text-zinc-950">
+                  Google Reviews Firestore Cache &amp; 10-Day Sync
+                </h2>
+              </div>
+              <p className="mt-1 text-xs text-zinc-500">
+                Google Reviews are permanently stored in Firestore (<code>settings/google_reviews</code>).
+                They automatically refresh when older than 10 days, or on-demand via the button below or cron jobs.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSyncReviews}
+              disabled={syncingReviews}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-zinc-800 transition disabled:opacity-50 shrink-0"
+            >
+              {syncingReviews ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3.5 w-3.5 text-emerald-400" />
+              )}
+              <span>{syncingReviews ? "Syncing..." : "Sync Reviews Now"}</span>
+            </button>
+          </div>
+
+          {/* Status metrics grid */}
+          <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="rounded-xl border border-zinc-100 bg-zinc-50/70 p-4">
+              <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block">
+                Cached Reviews Count
+              </span>
+              <span className="mt-1 text-2xl font-black text-zinc-900 block">
+                {reviewsMeta?.count ?? 0} Reviews
+              </span>
+              <span className="text-[11px] text-zinc-400">Stored in Firestore</span>
+            </div>
+
+            <div className="rounded-xl border border-zinc-100 bg-zinc-50/70 p-4">
+              <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block">
+                Last Synchronized
+              </span>
+              <span className="mt-1 text-sm font-bold text-zinc-900 block truncate">
+                {reviewsMeta?.lastUpdated
+                  ? new Date(reviewsMeta.lastUpdated).toLocaleDateString("en-CA", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "Never synchronized"}
+              </span>
+              <span className="text-[11px] text-zinc-400">
+                {reviewsMeta?.lastUpdated
+                  ? `${reviewsMeta.daysSinceUpdate} day(s) ago`
+                  : "Pending initialization"}
+              </span>
+            </div>
+
+            <div className="rounded-xl border border-zinc-100 bg-zinc-50/70 p-4">
+              <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block">
+                10-Day Refresh Policy
+              </span>
+              <div className="mt-1.5 flex items-center gap-2">
+                {reviewsMeta?.isStale ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
+                    <Clock className="h-3 w-3" />
+                    <span>Stale (&gt;10 days)</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
+                    <CheckCircle2 className="h-3 w-3" />
+                    <span>Fresh &amp; Up to Date</span>
+                  </span>
+                )}
+              </div>
+              <span className="text-[11px] text-zinc-400 mt-1 block">
+                Auto-updates if &gt; 10 days old
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-zinc-100 text-xs text-zinc-500 space-y-1">
+            <p>
+              <strong>Automated Cron Endpoint:</strong> <code>/api/cron/sync-reviews</code> (configured in <code>vercel.json</code> to trigger periodically, or callable via GitHub Actions / cron-job.org).
+            </p>
+          </div>
+        </div>
       </div>
-    </AdminLayout>
   );
 }

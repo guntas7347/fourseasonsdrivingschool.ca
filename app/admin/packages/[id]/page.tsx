@@ -3,7 +3,6 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { getPackageByIdAction, updatePackageAction } from "@/lib/actions/packages";
 import { useForm } from "@/lib/useForm";
 import {
@@ -347,16 +346,14 @@ function EditPackageFormContent() {
 
 export default function AdminEditPackagePage() {
   return (
-    <AdminLayout>
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center py-20 text-zinc-400">
-            <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
-        }
-      >
-        <EditPackageFormContent />
-      </Suspense>
-    </AdminLayout>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-20 text-zinc-400">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      }
+    >
+      <EditPackageFormContent />
+    </Suspense>
   );
 }

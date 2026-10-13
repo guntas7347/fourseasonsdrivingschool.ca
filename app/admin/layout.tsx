@@ -1,5 +1,6 @@
 import React from "react";
 import { connection } from "next/server";
+import AdminLayout from "@/components/admin/AdminLayout";
 
 export const instant = false;
 
@@ -10,5 +11,5 @@ export default async function AdminRootLayout({
 }) {
   await connection();
 
-  return <>{children}</>;
+  return <AdminLayout>{children}</AdminLayout>;
 }

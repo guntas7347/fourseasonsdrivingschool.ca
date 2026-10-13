@@ -4,11 +4,227 @@
 
 html {
   scroll-behavior: smooth;
-  font-size: 10px;
+  font-size: 14px;
 }
 
 body {
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   background-color: #fafafa;
   color: #18181b;
+  overflow-x: hidden;
+}
+
+/* Hardware accelerated micro-animations */
+@keyframes carVibration {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-1.5px);
+  }
+  75% {
+    transform: translateY(1px);
+  }
+}
+
+@keyframes wheelSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes roadMoveH {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: -80px 0;
+  }
+}
+
+@keyframes roadDashSvg {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -120;
+  }
+}
+
+@keyframes floatBadge {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes beaconFlash {
+  0%, 100% {
+    opacity: 0.3;
+    filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.4));
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.9));
+  }
+}
+
+@keyframes hornWave {
+  0% {
+    opacity: 1;
+    transform: scale(0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+}
+
+@keyframes pulseGlowEmerald {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+}
+
+@keyframes shimmerTrack {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Animation utility classes */
+.anim-car-vibration {
+  animation: carVibration 0.6s ease-in-out infinite;
+}
+
+.anim-wheel-spin {
+  animation: wheelSpin 0.45s linear infinite;
+}
+
+.anim-road-h {
+  animation: roadMoveH 0.7s linear infinite;
+}
+
+.anim-road-svg {
+  animation: roadDashSvg 0.8s linear infinite;
+}
+
+.anim-float-badge {
+  animation: floatBadge 3.5s ease-in-out infinite;
+}
+
+.anim-float-badge-delayed {
+  animation: floatBadge 4s ease-in-out infinite 1.5s;
+}
+
+.anim-beacon {
+  animation: beaconFlash 1.2s ease-in-out infinite;
+}
+
+.anim-horn-ring {
+  animation: hornWave 0.9s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+.anim-pulse-glow {
+  animation: pulseGlowEmerald 2.5s infinite;
+}
+
+/* Scroll reveal performance styling */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.scroll-reveal-left {
+  opacity: 0;
+  transform: translateX(-28px);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal-left.revealed {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.scroll-reveal-right {
+  opacity: 0;
+  transform: translateX(28px);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal-right.revealed {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.scroll-scale-up {
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-scale-up.revealed {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Modern CSS Scroll-Driven Animations (Progressive Enhancement) */
+@media (prefers-reduced-motion: no-preference) {
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    @keyframes nativeScrollFadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(32px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .scroll-timeline-fade {
+      animation: nativeScrollFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+      animation-timeline: view();
+      animation-range: entry 15% cover 35%;
+    }
+  }
+}
+
+/* Respect user's reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .scroll-reveal,
+  .scroll-reveal-left,
+  .scroll-reveal-right,
+  .scroll-scale-up {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }

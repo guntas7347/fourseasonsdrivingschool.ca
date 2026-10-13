@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { getBookingsAction, BookingItem } from "@/lib/actions/bookings";
 import {
   BookOpen,
@@ -37,8 +36,7 @@ export default function AdminBookingsPage() {
   }, []);
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-950">
@@ -173,6 +171,5 @@ export default function AdminBookingsPage() {
           </div>
         )}
       </div>
-    </AdminLayout>
   );
 }

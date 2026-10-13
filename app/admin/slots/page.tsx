@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import AdminLayout from "@/components/admin/AdminLayout";
 import {
   getSlotsAction,
   deleteSlotAction,
@@ -195,8 +194,7 @@ export default function AdminSlotsPage() {
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -584,6 +582,5 @@ export default function AdminSlotsPage() {
           </div>
         )}
       </div>
-    </AdminLayout>
   );
 }

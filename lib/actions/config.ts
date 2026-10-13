@@ -11,6 +11,7 @@ export interface AuthConfig {
 const DEFAULT_ALLOWED_GMAILS = [
   "admin@fourseasonsdrivingschool.ca",
   "guntas7347@gmail.com",
+  "fsdriving84@gmail.com",
 ];
 
 /**

@@ -1,94 +1,19 @@
 import React from "react";
-import { Star, ExternalLink, CheckCircle, Quote } from "lucide-react";
+import { Star, ExternalLink, CheckCircle } from "lucide-react";
+import getGoogleReviews, { GoogleReviewItem } from "@/lib/googleReviews";
 
-interface GoogleReviewItem {
-  id: string;
-  name: string;
-  avatar: string;
-  date: string;
-  rating: number;
-  reviewText: string;
-  location: string;
-  isLocalGuide?: boolean;
-  googleReviewUrl: string;
-}
+export default async function GoogleReviews() {
+  "use cache";
+  const reviews = await getGoogleReviews();
 
-const SAMPLE_GOOGLE_REVIEWS: GoogleReviewItem[] = [
-  {
-    id: "rev-1",
-    name: "Gurpreet Singh",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
-    date: "2 weeks ago",
-    rating: 5,
-    location: "Surrey (152nd St ICBC)",
-    isLocalGuide: true,
-    reviewText:
-      "Passed my Class 5 road test on my very first attempt today at the Surrey 152nd St ICBC! My instructor was incredibly patient and taught me exactly what examiners look for during hazard perception and intersection scans. The mock road test we did the day before was identical to the actual exam route. Best driving school in Surrey!",
-    googleReviewUrl: "https://maps.google.com/?q=Four+Seasons+Driving+School+Surrey+BC",
-  },
-  {
-    id: "rev-2",
-    name: "Jessica Miller",
-    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80",
-    date: "3 weeks ago",
-    rating: 5,
-    location: "North Delta",
-    isLocalGuide: false,
-    reviewText:
-      "I used to get severe anxiety driving on highways, but Four Seasons completely cured my fear. My instructor was calm, reassuring, and never raised their voice. Parallel parking and reverse stall parking became second nature in just 3 lessons. Plus, free home pick-up made scheduling so convenient!",
-    googleReviewUrl: "https://maps.google.com/?q=Four+Seasons+Driving+School+Surrey+BC",
-  },
-  {
-    id: "rev-3",
-    name: "Amanpreet Kaur",
-    avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80",
-    date: "1 month ago",
-    rating: 5,
-    location: "Langley ICBC",
-    isLocalGuide: true,
-    reviewText:
-      "Booked the 10-lesson package and car rental for my test day. Passed with zero driving errors on my sheet! The dual-brake car was clean, smooth to handle, and very easy to steer. Thank you Four Seasons for helping me get my license on the first try!",
-    googleReviewUrl: "https://maps.google.com/?q=Four+Seasons+Driving+School+Surrey+BC",
-  },
-  {
-    id: "rev-4",
-    name: "David Zhang",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
-    date: "1 month ago",
-    rating: 5,
-    location: "Fleetwood, Surrey",
-    isLocalGuide: false,
-    reviewText:
-      "Super professional service! Everything from the online booking to the pre-test warm-up lesson went seamlessly. The instructor gave me honest constructive feedback after every 90-minute session. Highly recommend to any beginner or Class 7N driver in Metro Vancouver.",
-    googleReviewUrl: "https://maps.google.com/?q=Four+Seasons+Driving+School+Surrey+BC",
-  },
-  {
-    id: "rev-5",
-    name: "Navneet Sandhu",
-    avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80",
-    date: "2 months ago",
-    rating: 5,
-    location: "Newton, Surrey",
-    isLocalGuide: true,
-    reviewText:
-      "Best driving instructors in Surrey hands down. Very punctual, respectful, and crystal clear explanations on speed control, shoulder checks, and pedestrian awareness. Passed my Class 7 road test without any stress!",
-    googleReviewUrl: "https://maps.google.com/?q=Four+Seasons+Driving+School+Surrey+BC",
-  },
-  {
-    id: "rev-6",
-    name: "Liam Campbell",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80",
-    date: "2 months ago",
-    rating: 5,
-    location: "Cloverdale",
-    isLocalGuide: false,
-    reviewText:
-      "Took 5 refresher lessons before my test after moving to BC from another province. The instructor brought me through all the tricky school zones and one-way streets around Surrey. Passed with flying colors!",
-    googleReviewUrl: "https://maps.google.com/?q=Four+Seasons+Driving+School+Surrey+BC",
-  },
-];
+  const totalCount = reviews.length;
+  const avgScore =
+    totalCount > 0
+      ? (
+          reviews.reduce((acc, r) => acc + (r.score || 5), 0) / totalCount
+        ).toFixed(1)
+      : "4.9";
 
-export default function GoogleReviews() {
   return (
     <section className="py-20 sm:py-28 bg-white border-b border-zinc-200/70">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -156,31 +81,37 @@ export default function GoogleReviews() {
 
         {/* Testimonials Grid */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {SAMPLE_GOOGLE_REVIEWS.map((review) => (
+          {reviews.map((review, idx) => (
             <div
-              key={review.id}
+              key={`${review.authorName}-${idx}`}
               className="flex flex-col justify-between rounded-2xl border border-zinc-200 bg-zinc-50/60 p-6 shadow-xs hover:border-zinc-300 hover:bg-white hover:shadow-md transition"
             >
               <div>
                 {/* Author Info */}
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <img
-                      src={review.avatar}
-                      alt={review.name}
-                      className="h-11 w-11 rounded-full object-cover border border-zinc-200"
-                    />
+                    {review.authorAvatarUrl ? (
+                      <img
+                        src={review.authorAvatarUrl}
+                        alt={review.authorName}
+                        className="h-11 w-11 rounded-full object-cover border border-zinc-200"
+                      />
+                    ) : (
+                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs border border-emerald-200">
+                        {review.authorInitials || "FS"}
+                      </div>
+                    )}
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <h4 className="text-sm font-bold text-zinc-900">{review.name}</h4>
-                        {review.isLocalGuide && (
-                          <span className="rounded bg-amber-100 text-amber-800 px-1.5 py-0.2 text-[9px] font-semibold">
-                            Local Guide
-                          </span>
-                        )}
+                        <h4 className="text-sm font-bold text-zinc-900">
+                          {review.authorName}
+                        </h4>
+                        <span className="rounded bg-amber-100 text-amber-800 px-1.5 py-0.2 text-[9px] font-semibold">
+                          Google Verified
+                        </span>
                       </div>
                       <p className="text-[11px] text-zinc-400 font-medium">
-                        {review.location} • {review.date}
+                        Surrey &amp; Metro Vancouver • {review.relativeDate || "Recent"}
                       </p>
                     </div>
                   </div>
@@ -210,14 +141,14 @@ export default function GoogleReviews() {
 
                 {/* Rating stars */}
                 <div className="mt-3.5 flex items-center gap-1 text-amber-400">
-                  {[...Array(review.rating)].map((_, i) => (
+                  {[...Array(Math.round(review.score || 5))].map((_, i) => (
                     <Star key={i} className="h-4 w-4 fill-current" />
                   ))}
                 </div>
 
                 {/* Review Text */}
                 <p className="mt-3 text-xs leading-relaxed text-zinc-700 italic">
-                  &ldquo;{review.reviewText}&rdquo;
+                  &ldquo;{review.content}&rdquo;
                 </p>
               </div>
 
@@ -229,7 +160,10 @@ export default function GoogleReviews() {
                 </span>
 
                 <a
-                  href={review.googleReviewUrl}
+                  href={
+                    review.sourceUrl ||
+                    "https://maps.google.com/?q=Four+Seasons+Driving+School+Surrey+BC"
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-[11px] font-semibold text-zinc-500 hover:text-zinc-900 transition"

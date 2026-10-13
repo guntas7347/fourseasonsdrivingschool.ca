@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { createBatchSlotsAction } from "@/lib/actions/slots";
 import { useForm } from "@/lib/useForm";
 import {
@@ -315,8 +314,7 @@ export default function AdminAdvancedNewSlotsPage() {
   }, [viewYear, viewMonth]);
 
   return (
-    <AdminLayout>
-      <div className="max-w-5xl mx-auto space-y-8 pb-20">
+    <div className="max-w-5xl mx-auto space-y-8 pb-20">
         {/* Navigation back */}
         <Link
           href="/admin/slots"
@@ -701,6 +699,5 @@ export default function AdminAdvancedNewSlotsPage() {
           </div>
         </div>
       </div>
-    </AdminLayout>
   );
 }

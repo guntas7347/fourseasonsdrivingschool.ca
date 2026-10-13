@@ -98,11 +98,11 @@ export default function PackagesPage() {
                   <span>Book Assessment Lesson</span>
                 </Link>
                 <a
-                  href="tel:6047244588"
+                  href="tel:+16045053129"
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-300 bg-white px-5 py-3 text-xs font-semibold text-zinc-800 hover:bg-zinc-100 transition"
                 >
                   <PhoneCall className="h-4 w-4 text-zinc-500" />
-                  <span>Call (604) 724-4588</span>
+                  <span>Call +1 604-505-3129</span>
                 </a>
               </div>
             </div>

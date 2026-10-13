@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { getAdminStatsAction, AdminStats } from "@/lib/actions/stats";
 import { BookingItem } from "@/lib/actions/bookings";
 import {
@@ -38,8 +37,7 @@ export default function AdminDashboardPage() {
   }, []);
 
   return (
-    <AdminLayout>
-      <div className="space-y-8">
+    <div className="space-y-8">
         {/* Page Title & Quick Actions */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -220,6 +218,5 @@ export default function AdminDashboardPage() {
           </>
         )}
       </div>
-    </AdminLayout>
   );
 }

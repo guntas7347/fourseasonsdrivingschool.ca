@@ -315,7 +315,7 @@ export default function RegistrationForm() {
                     autoComplete="tel"
                     value={form.phone}
                     onChange={handleChange}
-                    placeholder="(604) 555-0199"
+                    placeholder="(604) 505-3129"
                     className="mt-1.5 block w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 transition"
                   />
                 </div>

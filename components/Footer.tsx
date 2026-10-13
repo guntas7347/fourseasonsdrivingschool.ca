@@ -18,9 +18,10 @@ export default function Footer() {
               </span>
             </div>
             <p className="max-w-sm text-sm leading-relaxed text-zinc-400">
-              ICBC certified driving school offering top-rated driver training in Surrey,
-              Delta, Langley, and surrounding Metro Vancouver communities. Patient, defensive,
-              and focused on first-time road test success.
+              ICBC certified driving school offering top-rated driver training
+              in Surrey, Delta, Langley, and surrounding Metro Vancouver
+              communities. Patient, defensive, and focused on first-time road
+              test success.
             </p>
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-medium text-emerald-400">
               <ShieldCheck className="h-4 w-4" />
@@ -35,28 +36,51 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="#about" className="hover:text-white transition-colors">
+                <Link
+                  href="#about"
+                  className="hover:text-white transition-colors"
+                >
                   About the School
                 </Link>
               </li>
               <li>
-                <Link href="#packages" className="hover:text-white transition-colors">
+                <Link
+                  href="#packages"
+                  className="hover:text-white transition-colors"
+                >
                   Training Packages
                 </Link>
               </li>
               <li>
-                <Link href="#register" className="hover:text-white transition-colors">
+                <Link
+                  href="/#register"
+                  className="hover:text-white transition-colors"
+                >
                   Online Registration
                 </Link>
               </li>
               <li>
-                <Link href="#why-us" className="hover:text-white transition-colors">
+                <Link
+                  href="#why-us"
+                  className="hover:text-white transition-colors"
+                >
                   Why Four Seasons
                 </Link>
               </li>
               <li>
-                <Link href="#faqs" className="hover:text-white transition-colors">
+                <Link
+                  href="#faqs"
+                  className="hover:text-white transition-colors"
+                >
                   Frequently Asked Questions
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/gallery"
+                  className="hover:text-white transition-colors"
+                >
+                  Photo Gallery
                 </Link>
               </li>
             </ul>
@@ -84,22 +108,25 @@ export default function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-2.5">
                 <Phone className="h-4 w-4 shrink-0 text-emerald-400" />
-                <a href="tel:+16045550199" className="hover:text-white transition-colors">
-                  (604) 555-0199
+                <a
+                  href="tel:+16045053129"
+                  className="hover:text-white transition-colors"
+                >
+                  +1 604-505-3129
                 </a>
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="h-4 w-4 shrink-0 text-emerald-400" />
                 <a
-                  href="mailto:info@fourseasonsdrivingschool.ca"
+                  href="mailto:fsdriving84@gmail.com"
                   className="hover:text-white transition-colors"
                 >
-                  info@fourseasonsdrivingschool.ca
+                  fsdriving84@gmail.com
                 </a>
               </li>
               <li className="flex items-start gap-2.5">
                 <MapPin className="h-4 w-4 shrink-0 text-emerald-400 mt-0.5" />
-                <span>Surrey, British Columbia, Canada</span>
+                <span>5805 140A Pl, Surrey, BC V3X 2S1, Canada</span>
               </li>
               <li className="flex items-center gap-2.5 text-zinc-400">
                 <Clock className="h-4 w-4 shrink-0 text-emerald-400" />
@@ -111,11 +138,10 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-zinc-900 pt-8 text-xs text-zinc-500 sm:flex-row">
-          <p>
-            &copy; 2026 Four Seasons Driving School. All rights reserved.
-          </p>
+          <p>&copy; 2026 Four Seasons Driving School. All rights reserved.</p>
           <p className="text-center sm:text-right">
-            Dual-control certified training vehicles • Serving Surrey & Greater Vancouver
+            Dual-control certified training vehicles • Serving Surrey & Greater
+            Vancouver
           </p>
         </div>
       </div>

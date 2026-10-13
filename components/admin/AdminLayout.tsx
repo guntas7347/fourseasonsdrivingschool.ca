@@ -20,6 +20,7 @@ import {
   HelpCircle,
   Settings,
   AlertTriangle,
+  Image as ImageIcon,
 } from "lucide-react";
 import { auth, googleLogin } from "@/lib/firebase/googleLogin";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
@@ -30,8 +31,17 @@ interface AdminLayoutProps {
 }
 
 function AdminLayoutInner({ children }: AdminLayoutProps) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(() => auth.currentUser);
+  const [loading, setLoading] = useState<boolean>(() => {
+    // If already verified in current session and current user exists, start with loading = false
+    if (typeof window !== "undefined") {
+      const cached = sessionStorage.getItem("admin_verified_email");
+      if (cached && auth.currentUser && auth.currentUser.email === cached) {
+        return false;
+      }
+    }
+    return true;
+  });
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -41,7 +51,18 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (!currentUser) {
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem("admin_verified_email");
+        }
         setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      // Check if email was already verified in this session
+      const cached = typeof window !== "undefined" ? sessionStorage.getItem("admin_verified_email") : null;
+      if (cached && cached.toLowerCase() === (currentUser.email || "").toLowerCase()) {
+        setUser(currentUser);
         setLoading(false);
         return;
       }
@@ -50,7 +71,9 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
       try {
         const check = await checkIsEmailAuthorizedAction(currentUser.email);
         if (!check.authorized) {
-          // Reject and redirect to / as requested
+          if (typeof window !== "undefined") {
+            sessionStorage.removeItem("admin_verified_email");
+          }
           await signOut(auth);
           setUser(null);
           setLoginError(
@@ -64,6 +87,9 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
           return;
         }
 
+        if (typeof window !== "undefined" && currentUser.email) {
+          sessionStorage.setItem("admin_verified_email", currentUser.email.toLowerCase());
+        }
         setUser(currentUser);
         setLoading(false);
       } catch (err) {
@@ -83,6 +109,9 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
       if (cred && cred.user?.email) {
         const check = await checkIsEmailAuthorizedAction(cred.user.email);
         if (!check.authorized) {
+          if (typeof window !== "undefined") {
+            sessionStorage.removeItem("admin_verified_email");
+          }
           await signOut(auth);
           setUser(null);
           setLoginError(
@@ -93,6 +122,9 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
             router.push("/");
           }, 2500);
           return;
+        }
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("admin_verified_email", cred.user.email.toLowerCase());
         }
       }
     } catch (err: any) {
@@ -105,6 +137,9 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
 
   const handleLogout = async () => {
     try {
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("admin_verified_email");
+      }
       await signOut(auth);
     } catch (err) {
       console.error("Sign out error:", err);
@@ -226,6 +261,12 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
       href: "/admin/faqs",
       icon: HelpCircle,
       active: pathname.startsWith("/admin/faqs"),
+    },
+    {
+      label: "Gallery (CMS)",
+      href: "/admin/gallery",
+      icon: ImageIcon,
+      active: pathname.startsWith("/admin/gallery"),
     },
     {
       label: "Admin Config",

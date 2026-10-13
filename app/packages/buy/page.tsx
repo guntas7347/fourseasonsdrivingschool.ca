@@ -408,7 +408,7 @@ function PackagePurchaseContent() {
                       required
                       value={form.phone}
                       onChange={handleChange}
-                      placeholder="(604) 555-0199"
+                      placeholder="(604) 505-3129"
                       className="block w-full rounded-xl border border-zinc-300 bg-white pl-9 pr-3.5 py-2.5 text-xs font-semibold text-zinc-900 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 shadow-xs"
                     />
                   </div>
