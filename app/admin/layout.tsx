@@ -1,11 +1,12 @@
 import React from "react";
-
-export const dynamic = "force-dynamic";
+import { connection } from "next/server";
 
 export default async function AdminRootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  await connection();
+
   return <>{children}</>;
 }
