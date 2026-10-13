@@ -15,6 +15,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+ARG FIREBASE_PRIVATE_KEY
+ENV FIREBASE_PRIVATE_KEY=$FIREBASE_PRIVATE_KEY
+
 RUN npm run build
 
 
