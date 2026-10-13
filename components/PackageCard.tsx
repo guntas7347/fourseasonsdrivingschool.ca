@@ -13,16 +13,16 @@ export default function PackageCard({ pkg, featured }: PackageCardProps) {
 
   return (
     <div
-      className={`relative flex flex-col justify-between rounded-2xl p-7 transition-all ${
+      className={`scroll-reveal group relative flex flex-col justify-between rounded-3xl p-7 transition-all duration-300 ${
         isPopular
-          ? "border-2 border-zinc-900 bg-white shadow-xl scale-[1.02] z-10"
-          : "border border-zinc-200 bg-zinc-50/60 hover:border-zinc-300 hover:bg-white hover:shadow-md"
+          ? "border-2 border-zinc-950 bg-white shadow-xl scale-[1.02] z-10 anim-pulse-glow"
+          : "border border-zinc-200 bg-white/70 hover:border-zinc-300 hover:bg-white hover:shadow-lg hover:-translate-y-1"
       }`}
     >
       {/* Popular Floating Badge */}
       {isPopular && (
-        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-zinc-900 px-3.5 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm flex items-center gap-1.5">
-          <Sparkles className="h-3 w-3 text-emerald-400" />
+        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-zinc-950 px-4 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow-md flex items-center gap-1.5">
+          <Sparkles className="h-3 w-3 text-emerald-400 animate-spin" style={{ animationDuration: "3s" }} />
           <span>Most Popular • Best Value</span>
         </div>
       )}

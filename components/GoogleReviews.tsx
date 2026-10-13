@@ -84,7 +84,7 @@ export default async function GoogleReviews() {
           {reviews.map((review, idx) => (
             <div
               key={`${review.authorName}-${idx}`}
-              className="flex flex-col justify-between rounded-2xl border border-zinc-200 bg-zinc-50/60 p-6 shadow-xs hover:border-zinc-300 hover:bg-white hover:shadow-md transition"
+              className="scroll-reveal group flex flex-col justify-between rounded-3xl border border-zinc-200/90 bg-white/70 p-6 shadow-xs hover:border-zinc-300 hover:bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
             >
               <div>
                 {/* Author Info */}
