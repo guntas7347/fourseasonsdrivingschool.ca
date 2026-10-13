@@ -40,7 +40,7 @@ export interface BookingItem {
  * Create a new student booking with a real Firebase doc.id
  */
 export async function createBookingAction(
-  bookingData: Omit<BookingItem, "id" | "createdAt">
+  bookingData: Omit<BookingItem, "id" | "createdAt">,
 ): Promise<{ success: boolean; bookingId?: string; error?: string }> {
   try {
     const docRef = db.collection("bookings").doc(); // Generates official Firebase doc.id
@@ -54,19 +54,22 @@ export async function createBookingAction(
     // If a slotId was provided, update the slot document in Firestore to booked
     if (bookingData.slotId) {
       try {
-        await db.collection("slots").doc(bookingData.slotId).set(
-          {
-            status: "booked",
-            bookedBy: {
-              name: `${bookingData.firstName} ${bookingData.lastName}`,
-              email: bookingData.email,
-              phone: bookingData.phone,
-              bookingId: docRef.id,
+        await db
+          .collection("slots")
+          .doc(bookingData.slotId)
+          .set(
+            {
+              status: "booked",
+              bookedBy: {
+                name: `${bookingData.firstName} ${bookingData.lastName}`,
+                email: bookingData.email,
+                phone: bookingData.phone,
+                bookingId: docRef.id,
+              },
+              updatedAt: createdAt,
             },
-            updatedAt: createdAt,
-          },
-          { merge: true }
-        );
+            { merge: true },
+          );
       } catch (err) {
         console.warn("Could not mark slot document as booked:", err);
       }
@@ -81,9 +84,12 @@ export async function createBookingAction(
       date: bookingData.slotDate || new Date().toISOString().split("T")[0],
       time: bookingData.slotTime || "Standard Session",
       instructor: bookingData.slotInstructor,
-      slotType: bookingData.slotTypeName || bookingData.packageName || "Driving Lesson",
+      slotType:
+        bookingData.slotTypeName || bookingData.packageName || "Driving Lesson",
       price: bookingData.slotTypePrice || bookingData.packagePrice,
-      pickupAddress: bookingData.street ? `${bookingData.street}, ${bookingData.city}` : undefined,
+      pickupAddress: bookingData.street
+        ? `${bookingData.street}, ${bookingData.city}`
+        : undefined,
       licenseClass: bookingData.licenseClass,
     });
 
@@ -94,11 +100,19 @@ export async function createBookingAction(
       body: emailTemplate.body,
     });
 
-    await revalidatePaths(["/", "/bookings", "/admin/bookings", "/admin/slots"]);
+    await revalidatePaths([
+      "/",
+      "/bookings",
+      "/admin/bookings",
+      "/admin/slots",
+    ]);
     return { success: true, bookingId: docRef.id };
   } catch (error: any) {
     console.error("createBookingAction error:", error);
-    return { success: false, error: error?.message || "Failed to create booking" };
+    return {
+      success: false,
+      error: error?.message || "Failed to create booking",
+    };
   }
 }
 
@@ -107,7 +121,10 @@ export async function createBookingAction(
  */
 export async function getBookingsAction(): Promise<BookingItem[]> {
   try {
-    const snapshot = await db.collection("bookings").orderBy("createdAt", "desc").get();
+    const snapshot = await db
+      .collection("bookings")
+      .orderBy("createdAt", "desc")
+      .get();
     const bookings: BookingItem[] = [];
 
     snapshot.forEach((doc) => {
