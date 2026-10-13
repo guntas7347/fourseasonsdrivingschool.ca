@@ -2,7 +2,7 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
   authDomain: "fourseasonsdrivingschool-7541c.firebaseapp.com",
   projectId: "fourseasonsdrivingschool-7541c",
   storageBucket: "fourseasonsdrivingschool-7541c.firebasestorage.app",
