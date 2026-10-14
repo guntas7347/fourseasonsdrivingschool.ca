@@ -1,13 +1,39 @@
 import Stripe from "stripe";
-import { randomUUID } from "node:crypto";
 
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
 export const NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY =
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "";
 
-// Initialize official Stripe server SDK
-export const stripe = new Stripe(STRIPE_SECRET_KEY, {
-  typescript: true,
+let stripeInstance: Stripe | null = null;
+let cachedKey: string | null = null;
+
+/**
+ * Lazily initialize the Stripe instance with runtime secret key.
+ * Uses a build-safe fallback key during build time so Docker/CI build step succeeds without secrets.
+ */
+export const getStripe = (): Stripe => {
+  const currentKey =
+    process.env.STRIPE_SECRET_KEY || "sk_test_build_time_evaluation_placeholder";
+
+  if (!stripeInstance || cachedKey !== currentKey) {
+    cachedKey = currentKey;
+    stripeInstance = new Stripe(currentKey, {
+      typescript: true,
+    });
+  }
+
+  return stripeInstance;
+};
+
+// Proxied Stripe client for direct use: stripe.checkout, stripe.paymentIntents, etc.
+export const stripe = new Proxy({} as Stripe, {
+  get(_target, prop) {
+    const instance = getStripe();
+    const val = (instance as any)[prop];
+    if (typeof val === "function") {
+      return val.bind(instance);
+    }
+    return val;
+  },
 });
 
 /**
