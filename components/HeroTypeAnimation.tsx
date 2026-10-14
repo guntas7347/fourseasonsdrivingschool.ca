@@ -13,8 +13,6 @@ export default function HeroTypeAnimation() {
         2500,
         "Dual-Brake Safety Confidence.",
         2500,
-        "Surrey & Langley Route Experts.",
-        2500,
         "Calm Coaching for Nervous Drivers.",
         2500,
       ]}

@@ -25,7 +25,7 @@ export default function WhyChooseUsShowcase() {
       short: "Licensed, bonded & patient coaching for all levels.",
       detail:
         "Every Four Seasons instructor is certified under the BC Motor Vehicle Act. We specialize in patient, calm guidance designed especially for first-time or nervous learners.",
-      badge: "Class 4 & 5 Certified",
+      badge: "Class 5 & 7 Certified",
     },
     {
       id: "dual-brake",
@@ -41,17 +41,17 @@ export default function WhyChooseUsShowcase() {
       id: "routes",
       number: "03",
       icon: MapPin,
-      title: "Surrey & Langley Test Route Training",
-      short: "Practice where you will actually be evaluated.",
+      title: "1v1 Driving Classes",
+      short: "100% of your time, 100% of your lesson.",
       detail:
-        "We rehearse the exact turns, 30 km/h school zones, uncontrolled intersections, and highway merges tested at Surrey 152nd St, Newton, and Langley ICBC licensing offices.",
+        "We do 1v1 driving classes and prepare you for the actual test. We cover all the important points that are tested in the actual test.",
       badge: "98% Pass Rate",
     },
     {
       id: "doorstep",
       number: "04",
       icon: Clock,
-      title: "Free Door-to-Door Pickup",
+      title: "Free Door-to-Door Pickup and Dropoff",
       short: "We pick you up from home, high school, or work.",
       detail:
         "No need to take transit to your driving lesson. We provide prompt, complimentary pickup and drop-off throughout Surrey, Delta, Langley, and White Rock.",
@@ -76,7 +76,7 @@ export default function WhyChooseUsShowcase() {
             />
             {/* Subtle Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/70 via-transparent to-transparent" />
-            
+
             {/* Live Student Quote on photo */}
             <div className="absolute bottom-4 left-4 right-4 text-white">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/90 backdrop-blur-xs px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
@@ -84,7 +84,8 @@ export default function WhyChooseUsShowcase() {
                 Live In-Car Coaching
               </span>
               <p className="mt-1.5 text-xs font-medium text-zinc-100 leading-snug">
-                &ldquo;Patient guidance that turns road nervousness into calm, instinctual control.&rdquo;
+                &ldquo;Patient guidance that turns road nervousness into calm,
+                instinctual control.&rdquo;
               </p>
             </div>
           </div>
@@ -108,7 +109,9 @@ export default function WhyChooseUsShowcase() {
             <HeartHandshake className="h-4 w-4 text-emerald-600" />
             <span className="font-semibold">Nervous Drivers Welcomed</span>
           </div>
-          <span className="text-[11px] font-medium text-zinc-500">Class 5 & 7N</span>
+          <span className="text-[11px] font-medium text-zinc-500">
+            Class 5 & 7N
+          </span>
         </div>
       </div>
 
@@ -148,9 +151,7 @@ export default function WhyChooseUsShowcase() {
                         {feat.title}
                       </h3>
                     </div>
-                    <p className="mt-0.5 text-xs text-zinc-600">
-                      {feat.short}
-                    </p>
+                    <p className="mt-0.5 text-xs text-zinc-600">{feat.short}</p>
                   </div>
                 </div>
 
@@ -171,7 +172,9 @@ export default function WhyChooseUsShowcase() {
                   <p>{feat.detail}</p>
                   <div className="mt-2.5 flex items-center gap-2 text-[11px] font-semibold text-emerald-700">
                     <CheckCircle2 className="h-3.5 w-3.5" />
-                    <span>Included in all training packages and single lessons</span>
+                    <span>
+                      Included in all training packages and single lessons
+                    </span>
                   </div>
                 </div>
               )}

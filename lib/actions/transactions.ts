@@ -518,15 +518,10 @@ export async function createCheckoutSessionAction({
         ? `https://${process.env.VERCEL_URL}`
         : "http://localhost:3000");
 
-    const customer = await stripe.customers.create({
-      name: customerName || "",
-      email: customerEmail || "",
-    });
-
     const session = await stripe.checkout.sessions.create({
       ui_mode: "elements",
       mode: "payment",
-      customer: customer.id,
+      customer_email: customerEmail || undefined,
       line_items: [
         {
           price_data: {
