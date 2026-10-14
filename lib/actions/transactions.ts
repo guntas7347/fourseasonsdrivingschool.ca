@@ -516,7 +516,7 @@ export async function createCheckoutSessionAction({
       process.env.NEXT_PUBLIC_APP_URL ||
       (process.env.VERCEL_URL
         ? `https://${process.env.VERCEL_URL}`
-        : "http://localhost:3000");
+        : "https://www.fourseasonsdrivingschool.ca");
 
     const session = await stripe.checkout.sessions.create({
       ui_mode: "elements",
