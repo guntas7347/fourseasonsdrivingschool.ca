@@ -27,7 +27,6 @@ interface SlotConfigFields {
   toTime: string;
   durationMins: string;
   breakMins: string;
-  instructor: string;
 }
 
 const DEFAULT_CONFIG: SlotConfigFields = {
@@ -35,7 +34,6 @@ const DEFAULT_CONFIG: SlotConfigFields = {
   toTime: "17:00",
   durationMins: "90",
   breakMins: "15",
-  instructor: "Gary S. (Senior ICBC Trainer)",
 };
 
 interface GeneratedSlot {
@@ -44,7 +42,6 @@ interface GeneratedSlot {
   startTime: string;
   endTime: string;
   duration: string;
-  instructor: string;
 }
 
 const MONTH_NAMES = [
@@ -183,7 +180,6 @@ export default function AdminAdvancedNewSlotsPage() {
         startTime: int.start12,
         endTime: int.end12,
         duration: `${duration} mins`,
-        instructor: form.instructor,
       }));
 
       updatedMap[dateStr] = newSlotsForDate;
@@ -217,7 +213,6 @@ export default function AdminAdvancedNewSlotsPage() {
         startTime: int.start,
         endTime: int.end,
         duration: "90 mins",
-        instructor: form.instructor,
       }));
     });
 
@@ -273,7 +268,6 @@ export default function AdminAdvancedNewSlotsPage() {
         startTime: s.startTime,
         endTime: s.endTime,
         duration: s.duration,
-        instructor: s.instructor,
         status: "available" as const,
       }));
 
@@ -439,13 +433,13 @@ export default function AdminAdvancedNewSlotsPage() {
             </p>
           </div>
 
-          {/* 2. TIMING & INSTRUCTOR CONTROLS (Right, 6 cols) */}
+          {/* 2. TIMING CONTROLS (Right, 6 cols) */}
           <div className="lg:col-span-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs space-y-4">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-emerald-600" />
                 <h3 className="text-sm font-bold text-zinc-900">
-                  Step 2: Timings, Duration &amp; Instructor
+                  Step 2: Timings &amp; Duration
                 </h3>
               </div>
             </div>
@@ -517,30 +511,6 @@ export default function AdminAdvancedNewSlotsPage() {
                   <option value="30">30 minutes break</option>
                 </select>
               </div>
-            </div>
-
-            {/* Instructor */}
-            <div>
-              <label htmlFor="instructor" className="block text-xs font-semibold text-zinc-700">
-                Assigned Instructor
-              </label>
-              <select
-                id="instructor"
-                name="instructor"
-                value={form.instructor}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-medium text-zinc-900 focus:border-zinc-900 focus:outline-none"
-              >
-                <option value="Gary S. (Senior ICBC Trainer)">
-                  Gary S. (Senior ICBC Trainer)
-                </option>
-                <option value="Paul D. (Defensive Specialist)">
-                  Paul D. (Defensive Specialist)
-                </option>
-                <option value="Manpreet K. (Patient & Friendly)">
-                  Manpreet K. (Patient &amp; Friendly)
-                </option>
-              </select>
             </div>
 
             {/* Generate Action Buttons */}
@@ -663,7 +633,7 @@ export default function AdminAdvancedNewSlotsPage() {
         <div className="sticky bottom-4 z-20 rounded-2xl border border-zinc-200 bg-white/95 p-4 sm:p-5 shadow-xl backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <p className="text-sm font-bold text-zinc-900">
-              Ready to Publish Instructor Schedule?
+              Ready to Publish Lesson Schedule?
             </p>
             <p className="text-xs text-zinc-500">
               Total {totalSlotsCount} slot box{totalSlotsCount === 1 ? "" : "es"} across{" "}

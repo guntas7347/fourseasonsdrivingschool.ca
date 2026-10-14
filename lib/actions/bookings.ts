@@ -31,7 +31,9 @@ export interface BookingItem {
   roadTestLocation?: string;
   additionalNotes?: string;
   paymentMethod?: string;
-  paymentStatus: "paid" | "pending_dev_mode" | "pay_on_arrival";
+  paymentStatus: "paid" | "pending_dev_mode" | "pay_on_arrival" | "pending_payment" | "refunded";
+  paymentIntentId?: string;
+  paidAt?: string;
   cardLast4?: string;
   createdAt: string;
 }
@@ -166,3 +168,86 @@ export async function getBookingsAction(): Promise<BookingItem[]> {
     return [];
   }
 }
+
+/**
+ * Fetch a single booking by doc ID
+ */
+export async function getBookingByIdAction(id: string): Promise<BookingItem | null> {
+  try {
+    if (!id) return null;
+    const doc = await db.collection("bookings").doc(id).get();
+    if (!doc.exists) return null;
+    const data = doc.data()!;
+    return {
+      id: doc.id,
+      firstName: data.firstName || "",
+      lastName: data.lastName || "",
+      email: data.email || "",
+      phone: data.phone || "",
+      street: data.street || "",
+      city: data.city || "",
+      postCode: data.postCode || "",
+      licenseNumber: data.licenseNumber || "",
+      licenseClass: data.licenseClass || "",
+      licenseExpiry: data.licenseExpiry || "",
+      packageId: data.packageId || "",
+      packageName: data.packageName || "",
+      packagePrice: data.packagePrice || "",
+      slotId: data.slotId || "",
+      slotDate: data.slotDate || "",
+      slotTime: data.slotTime || "",
+      slotInstructor: data.slotInstructor || "",
+      alreadyPurchased: data.alreadyPurchased || "no",
+      bookedRoadTest: data.bookedRoadTest || "no",
+      roadTestDate: data.roadTestDate,
+      roadTestLocation: data.roadTestLocation,
+      additionalNotes: data.additionalNotes,
+      paymentMethod: data.paymentMethod || "card",
+      paymentStatus: data.paymentStatus || "pending_payment",
+      cardLast4: data.cardLast4,
+      createdAt: data.createdAt || "",
+    };
+  } catch (err) {
+    console.error("getBookingByIdAction error:", err);
+    return null;
+  }
+}
+
+/**
+ * Mark a booking as paid in Firestore (called upon Stripe payment confirmation)
+ */
+export async function markBookingPaidAction(params: {
+  bookingId: string;
+  paymentIntentId?: string;
+  cardLast4?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!params.bookingId) throw new Error("Missing booking ID");
+    const now = new Date().toISOString();
+
+    await db.collection("bookings").doc(params.bookingId).set(
+      {
+        paymentStatus: "paid",
+        paymentMethod: "stripe_card",
+        paymentIntentId: params.paymentIntentId || "",
+        cardLast4: params.cardLast4 || "",
+        paidAt: now,
+      },
+      { merge: true }
+    );
+
+    await revalidatePaths([
+      "/",
+      "/bookings",
+      "/admin/bookings",
+      "/admin/slots",
+      "/admin/purchased-packages",
+    ]);
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("markBookingPaidAction error:", error);
+    return { success: false, error: error?.message || "Failed to update booking status" };
+  }
+}
+

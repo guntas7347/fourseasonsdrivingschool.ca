@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import SlotCalendar, { TimeSlot } from "./SlotCalendar";
 import { useForm } from "@/lib/useForm";
-import { getPackagesAction, PackageItem } from "@/lib/actions/packages";
 import { getSlotTypesAction, SlotTypeItem } from "@/lib/actions/slots";
 
 export interface BookingFormData {
@@ -36,7 +35,7 @@ export interface BookingFormData {
   slotTypeId?: string;
   slotTypeName?: string;
   slotTypePrice?: string;
-  packageOfInterest: string;
+  packageOfInterest?: string;
   packageName?: string;
   packagePrice?: string;
   alreadyPurchased: "yes" | "no" | "";
@@ -59,7 +58,6 @@ const INITIAL_FORM_DATA: BookingFormData = {
   licenseExpiry: "",
   startDate: "2026-10-15",
   selectedSlot: null,
-  packageOfInterest: "",
   alreadyPurchased: "no",
   bookedRoadTest: "no",
   roadTestDate: "",
@@ -69,7 +67,6 @@ const INITIAL_FORM_DATA: BookingFormData = {
 
 export default function RegistrationForm() {
   const router = useRouter();
-  const [packages, setPackages] = useState<PackageItem[]>([]);
   const [slotTypes, setSlotTypes] = useState<SlotTypeItem[]>([]);
   const [slotError, setSlotError] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -77,26 +74,6 @@ export default function RegistrationForm() {
   // Using useForm as requested
   const { form, setFormFields, handleChange, setFields } =
     useForm<BookingFormData>(INITIAL_FORM_DATA);
-
-  // Load packages dynamically from database (admin packages)
-  useEffect(() => {
-    async function loadPackages() {
-      try {
-        const pkgs = await getPackagesAction();
-        setPackages(pkgs);
-        if (pkgs.length > 0 && !form.packageOfInterest) {
-          setFields({
-            packageOfInterest: pkgs[0].id,
-            packageName: pkgs[0].name,
-            packagePrice: pkgs[0].price,
-          });
-        }
-      } catch (err) {
-        console.error("Error loading packages:", err);
-      }
-    }
-    loadPackages();
-  }, [setFields, form.packageOfInterest]);
 
   // Load slot types dynamically from database (admin slot types)
   useEffect(() => {
@@ -142,16 +119,6 @@ export default function RegistrationForm() {
     setValidationError(null);
   };
 
-  const handlePackageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedId = e.target.value;
-    const matchedPkg = packages.find((p) => p.id === selectedId);
-    setFields({
-      packageOfInterest: selectedId,
-      packageName: matchedPkg?.name || "Selected Package",
-      packagePrice: matchedPkg?.price || "$110",
-    });
-  };
-
   const handleSlotTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedId = e.target.value;
     const matchedType = slotTypes.find((t) => t.id === selectedId);
@@ -172,7 +139,7 @@ export default function RegistrationForm() {
     }
 
     if (!form.street || !form.city) {
-      setValidationError("Please enter your street address and city for instructor pickup.");
+      setValidationError("Please enter your street address and city for lesson pickup.");
       return;
     }
 
@@ -188,16 +155,15 @@ export default function RegistrationForm() {
 
     setValidationError(null);
 
-    // Save half-filled draft to sessionStorage as requested
-    const selectedPkg = packages.find((p) => p.id === form.packageOfInterest);
+    // Save half-filled draft to sessionStorage
     const selectedType = slotTypes.find((t) => t.id === form.slotTypeId);
 
     const draftPayload: BookingFormData = {
       ...form,
       slotTypeName: selectedType?.name || form.slotTypeName || "Standard 90-Min Lesson",
       slotTypePrice: selectedType?.price || form.slotTypePrice || "$110",
-      packageName: selectedPkg?.name || form.packageName || "Driving Lesson Package",
-      packagePrice: selectedPkg?.price || form.packagePrice || "$110",
+      packageName: selectedType?.name || form.slotTypeName || "Standard 90-Min Lesson",
+      packagePrice: selectedType?.price || form.slotTypePrice || "$110",
     };
 
     console.log("==================================================");
@@ -439,18 +405,18 @@ export default function RegistrationForm() {
               </div>
             </div>
 
-            {/* SECTION 4: Slot Type & Package Selection (Dynamic from DB) */}
+            {/* SECTION 4: Slot Type Selection (Dynamic from DB) */}
             <div>
               <div className="flex items-center gap-2.5 border-b border-zinc-100 pb-3">
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700">
                   <Car className="h-4 w-4" />
                 </div>
                 <h3 className="text-base font-semibold text-zinc-900">
-                  4. Lesson Slot Type &amp; Course Selection
+                  4. Lesson Slot Type
                 </h3>
               </div>
 
-              <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="mt-5">
                 {/* Slot Type Selector */}
                 <div>
                   <label htmlFor="slotTypeId" className="block text-sm font-medium text-zinc-700">
@@ -470,30 +436,7 @@ export default function RegistrationForm() {
                     ))}
                   </select>
                   <p className="mt-1 text-xs text-zinc-400">
-                    Price for your selected individual appointment slot.
-                  </p>
-                </div>
-
-                {/* Package of Interest Selector */}
-                <div>
-                  <label htmlFor="packageOfInterest" className="block text-sm font-medium text-zinc-700">
-                    Comprehensive Package (Optional)
-                  </label>
-                  <select
-                    id="packageOfInterest"
-                    name="packageOfInterest"
-                    value={form.packageOfInterest}
-                    onChange={handlePackageChange}
-                    className="mt-1.5 block w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 transition"
-                  >
-                    {packages.map((pkg) => (
-                      <option key={pkg.id} value={pkg.id}>
-                        {pkg.name} — {pkg.price}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="mt-1 text-xs text-zinc-400">
-                    Choose if you want to purchase a multi-lesson package.
+                    Price and duration for your selected individual appointment slot.
                   </p>
                 </div>
               </div>

@@ -19,7 +19,7 @@ export interface TimeSlot {
   startTime: string;
   endTime: string;
   duration: string; // "90 mins"
-  instructor: string;
+  instructor?: string;
   available: boolean;
   type: "Regular" | "Peak" | "Weekend";
 }
@@ -352,7 +352,7 @@ export default function SlotCalendar({
             </h4>
           </div>
           <p className="text-xs text-zinc-500 mt-0.5">
-            Real-time instructor schedule for Surrey &amp; Delta training cars.
+            Real-time lesson schedule for Surrey &amp; Delta training cars.
           </p>
         </div>
 
@@ -514,7 +514,7 @@ export default function SlotCalendar({
                             {slot.time}
                           </p>
                           <p className="text-[10px] text-zinc-400">
-                            {slot.instructor}
+                            Dual-control training vehicle
                           </p>
                         </div>
                       </div>
@@ -566,7 +566,7 @@ export default function SlotCalendar({
                         </div>
                         <p className="text-[11px] text-zinc-500 mt-0.5 flex items-center gap-1">
                           <Car className="h-3 w-3 text-emerald-600 inline" />
-                          <span>{slot.instructor}</span>
+                          <span>Dual-Control Training Vehicle</span>
                         </p>
                       </div>
                     </div>

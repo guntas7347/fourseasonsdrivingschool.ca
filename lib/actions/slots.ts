@@ -126,7 +126,7 @@ export async function createSlotAction(slotData: {
       endTime: slotData.endTime,
       time,
       duration: slotData.duration || "90 mins",
-      instructor: slotData.instructor || "Gary S. (Senior Instructor)",
+      instructor: slotData.instructor || "",
       status: slotData.status || "available",
       createdAt: now,
     });
@@ -140,7 +140,7 @@ export async function createSlotAction(slotData: {
 }
 
 /**
- * Create multiple instructor slots in batch with real Firebase doc.id
+ * Create multiple slots in batch with real Firebase doc.id (no instructor requirement)
  */
 export async function createBatchSlotsAction(
   slots: Array<{
@@ -158,7 +158,6 @@ export async function createBatchSlotsAction(
     }
 
     const now = new Date().toISOString();
-    // Firestore supports up to 500 writes per batch
     const batchSize = 400;
     let savedCount = 0;
 
@@ -175,7 +174,7 @@ export async function createBatchSlotsAction(
           endTime: slotData.endTime,
           time,
           duration: slotData.duration || "90 mins",
-          instructor: slotData.instructor || "Gary S. (Senior Instructor)",
+          instructor: slotData.instructor || "",
           status: slotData.status || "available",
           createdAt: now,
         });
@@ -220,11 +219,212 @@ export async function updateSlotStatusAction(
 }
 
 /**
- * Delete a slot by its Firebase doc.id
+ * Free a booked slot:
+ * - Initiates mock Stripe refund via /lib/stripe
+ * - Sets slot status to 'available' and removes bookedBy
+ * - Unlocks the slot so it can now be deleted or booked again
+ */
+export async function freeSlotAction(
+  slotId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!slotId) throw new Error("Missing slot doc.id");
+
+    const slotDoc = await db.collection("slots").doc(slotId).get();
+    if (!slotDoc.exists) throw new Error("Slot not found");
+
+    const slotData = slotDoc.data();
+
+    // Call mock Stripe refund
+    try {
+      const { initiateRefund } = await import("@/lib/stripe");
+      await initiateRefund({
+        paymentIntentId: "pi_mock_slot_refund",
+        reason: "requested_by_customer",
+      });
+    } catch (stripeErr) {
+      console.warn("Stripe mock refund log:", stripeErr);
+    }
+
+    // If there was an associated bookingId, mark the booking as refunded/cancelled
+    const bookingId = slotData?.bookedBy?.bookingId;
+    if (bookingId) {
+      try {
+        await db.collection("bookings").doc(bookingId).set(
+          {
+            status: "cancelled",
+            paymentStatus: "refunded",
+            refundedAt: new Date().toISOString(),
+          },
+          { merge: true }
+        );
+      } catch (bErr) {
+        console.warn("Could not update linked booking status:", bErr);
+      }
+    }
+
+    // Reset slot to available and clear bookedBy
+    await db.collection("slots").doc(slotId).set(
+      {
+        status: "available",
+        bookedBy: null,
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+
+    await revalidatePaths(["/", "/bookings", "/admin/slots", "/admin/bookings"]);
+    return { success: true };
+  } catch (error: any) {
+    console.error("freeSlotAction error:", error);
+    return { success: false, error: error?.message || "Failed to free slot" };
+  }
+}
+
+/**
+ * Manually book a slot from Admin modal (e.g. on call, cash on spot)
+ */
+export async function manualBookSlotAction(params: {
+  slotId: string;
+  studentName: string;
+  email: string;
+  phone: string;
+  paymentMethod: "Cash on spot" | "Card" | "Other";
+  slotTypeName?: string;
+  slotTypePrice?: string;
+  notes?: string;
+}): Promise<{ success: boolean; bookingId?: string; error?: string }> {
+  try {
+    if (!params.slotId) throw new Error("Slot ID required");
+    if (!params.studentName?.trim() || !params.phone?.trim()) {
+      throw new Error("Student Name and Phone number are required");
+    }
+
+    const slotDoc = await db.collection("slots").doc(params.slotId).get();
+    if (!slotDoc.exists) throw new Error("Slot not found");
+
+    const slotData = slotDoc.data();
+    if (slotData?.status === "booked") {
+      throw new Error("This slot is already booked. Please free it first.");
+    }
+
+    const now = new Date().toISOString();
+    const [firstName, ...lastNames] = params.studentName.trim().split(" ");
+    const lastName = lastNames.join(" ") || "Student";
+
+    // Create record in bookings collection
+    const bookingDoc = db.collection("bookings").doc();
+    await bookingDoc.set({
+      firstName,
+      lastName,
+      email: params.email?.trim() || "walkin@fourseasonsdrivingschool.ca",
+      phone: params.phone.trim(),
+      street: "Office / Manual Booking",
+      city: "Surrey",
+      postCode: "",
+      licenseNumber: "",
+      licenseClass: "Class 7 / 5",
+      licenseExpiry: "",
+      packageId: "",
+      packageName: params.slotTypeName || "Individual Lesson",
+      packagePrice: params.slotTypePrice || "$110",
+      slotId: params.slotId,
+      slotDate: slotData?.date || "",
+      slotTime: slotData?.time || "",
+      slotInstructor: slotData?.instructor || "",
+      slotTypeName: params.slotTypeName || "Lesson Slot",
+      slotTypePrice: params.slotTypePrice || "$110",
+      alreadyPurchased: "no",
+      bookedRoadTest: "no",
+      additionalNotes: params.notes || `Manual admin booking via call. Payment: ${params.paymentMethod}`,
+      paymentMethod: params.paymentMethod,
+      paymentStatus: params.paymentMethod === "Cash on spot" ? "pay_on_arrival" : "paid",
+      createdAt: now,
+    });
+
+    // Mark slot as booked
+    await db.collection("slots").doc(params.slotId).set(
+      {
+        status: "booked",
+        bookedBy: {
+          name: params.studentName.trim(),
+          email: params.email?.trim() || "",
+          phone: params.phone.trim(),
+          bookingId: bookingDoc.id,
+          paymentMethod: params.paymentMethod,
+        },
+        updatedAt: now,
+      },
+      { merge: true }
+    );
+
+    // Call mock Stripe payment intent if paid by Card
+    if (params.paymentMethod === "Card") {
+      try {
+        const { createTransaction } = await import("@/lib/stripe");
+        await createTransaction({
+          amount: 11000,
+          currency: "cad",
+          paymentMethod: "pm_mock_manual_card",
+        });
+      } catch (stripeErr) {
+        console.warn("Stripe mock transaction error:", stripeErr);
+      }
+    }
+
+    // Log confirmation email
+    try {
+      const { generateSlotBookingEmail, logConfirmationEmail } = await import("@/lib/email");
+      const emailTemplate = generateSlotBookingEmail({
+        bookingId: bookingDoc.id,
+        customerName: params.studentName.trim(),
+        email: params.email?.trim() || "walkin@fourseasonsdrivingschool.ca",
+        phone: params.phone.trim(),
+        date: slotData?.date || "",
+        time: slotData?.time || "",
+        instructor: slotData?.instructor || "",
+        slotType: params.slotTypeName || "Lesson Slot",
+        price: params.slotTypePrice || "$110",
+        licenseClass: "Class 7 / 5",
+      });
+
+      logConfirmationEmail({
+        type: "SLOT_BOOKING",
+        to: params.email?.trim() || "walkin@fourseasonsdrivingschool.ca",
+        subject: emailTemplate.subject,
+        body: emailTemplate.body,
+      });
+    } catch (eErr) {
+      console.warn("Email logging error:", eErr);
+    }
+
+    await revalidatePaths(["/", "/bookings", "/admin/slots", "/admin/bookings"]);
+    return { success: true, bookingId: bookingDoc.id };
+  } catch (error: any) {
+    console.error("manualBookSlotAction error:", error);
+    return { success: false, error: error?.message || "Failed to manually book slot" };
+  }
+}
+
+/**
+ * Delete a slot by its Firebase doc.id.
+ * Safety check: If slot is marked as booked, deletion is blocked!
  */
 export async function deleteSlotAction(id: string): Promise<{ success: boolean; error?: string }> {
   try {
     if (!id) throw new Error("Missing slot doc.id");
+
+    const slotDoc = await db.collection("slots").doc(id).get();
+    if (slotDoc.exists) {
+      const data = slotDoc.data();
+      if (data?.status === "booked") {
+        return {
+          success: false,
+          error: "Cannot delete a booked slot directly. Please open the slot management modal and free it first.",
+        };
+      }
+    }
+
     await db.collection("slots").doc(id).delete();
     await revalidatePaths(["/", "/bookings", "/admin/slots"]);
     return { success: true };

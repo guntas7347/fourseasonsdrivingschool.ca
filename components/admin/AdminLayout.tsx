@@ -21,6 +21,8 @@ import {
   Settings,
   AlertTriangle,
   Image as ImageIcon,
+  ShoppingBag,
+  DollarSign,
 } from "lucide-react";
 import { auth, googleLogin } from "@/lib/firebase/googleLogin";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
@@ -256,10 +258,22 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
       active: pathname === "/admin",
     },
     {
+      label: "Stripe Transactions",
+      href: "/admin/transactions",
+      icon: DollarSign,
+      active: pathname.startsWith("/admin/transactions"),
+    },
+    {
       label: "Packages",
       href: "/admin/packages",
       icon: Package,
       active: pathname.startsWith("/admin/packages"),
+    },
+    {
+      label: "Purchased Packages",
+      href: "/admin/purchased-packages",
+      icon: ShoppingBag,
+      active: pathname.startsWith("/admin/purchased-packages"),
     },
     {
       label: "Lesson Slots",

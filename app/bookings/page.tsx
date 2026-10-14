@@ -24,6 +24,7 @@ import {
   Printer,
   ChevronRight,
   HelpCircle,
+  Lock,
 } from "lucide-react";
 
 interface BookingPageFormFields {
@@ -76,7 +77,7 @@ const INITIAL_FIELDS: BookingPageFormFields = {
   packagePrice: "$999",
   slotId: "slot-default",
   slotTime: "10:30 AM – 12:00 PM",
-  slotInstructor: "Gary S. (Senior ICBC Trainer)",
+  slotInstructor: "",
   slotTypeName: "Standard 90-Min Lesson",
   slotTypePrice: "$110",
   alreadyPurchased: "no",
@@ -113,7 +114,7 @@ export default function BookingsCompletionPage() {
             ...parsed,
             slotId: parsed.selectedSlot?.id || "slot-draft",
             slotTime: parsed.selectedSlot?.time || "10:30 AM – 12:00 PM",
-            slotInstructor: parsed.selectedSlot?.instructor || "Gary S. (Senior ICBC Trainer)",
+            slotInstructor: parsed.selectedSlot?.instructor || "",
             slotTypeName: parsed.slotTypeName || "Standard 90-Min Lesson",
             slotTypePrice: parsed.slotTypePrice || "$110",
             packageName: parsed.packageName || "Driving Lesson Package",
@@ -166,9 +167,9 @@ export default function BookingsCompletionPage() {
         paymentMethod: form.paymentMethod,
         paymentStatus:
           form.paymentMethod === "card"
-            ? ("paid" as const)
+            ? ("pending_payment" as const)
             : ("pay_on_arrival" as const),
-        cardLast4: form.cardNumber ? form.cardNumber.slice(-4) : "4242",
+        cardLast4: form.paymentMethod === "card" ? "stripe" : "cash",
       };
 
       console.log("==================================================");
@@ -179,10 +180,27 @@ export default function BookingsCompletionPage() {
       const res = await createBookingAction(bookingPayload);
 
       if (res.success && res.bookingId) {
-        setConfirmedBookingId(res.bookingId);
         if (typeof window !== "undefined") {
           sessionStorage.removeItem("fourseasons_booking_draft");
         }
+
+        // If paying online with Stripe, redirect to separate checkout page
+        if (form.paymentMethod === "card") {
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem(
+              "fourseasons_checkout_booking",
+              JSON.stringify({
+                ...bookingPayload,
+                id: res.bookingId,
+              })
+            );
+          }
+          router.push(`/checkout?bookingId=${res.bookingId}`);
+          return;
+        }
+
+        // Pay on arrival: complete on current page
+        setConfirmedBookingId(res.bookingId);
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
         setErrorMessage(res.error || "Failed to process booking reservation.");
@@ -283,9 +301,9 @@ export default function BookingsCompletionPage() {
 
                   <div>
                     <dt className="text-xs font-medium uppercase tracking-wider text-zinc-400">
-                      Assigned Instructor
+                      Training Vehicle
                     </dt>
-                    <dd className="text-zinc-700 mt-0.5">{form.slotInstructor}</dd>
+                    <dd className="text-zinc-700 mt-0.5">Dual-Control Certified Vehicle</dd>
                   </div>
 
                   <div>
@@ -299,15 +317,26 @@ export default function BookingsCompletionPage() {
 
                   <div>
                     <dt className="text-xs font-medium uppercase tracking-wider text-zinc-400">
-                      Payment Status
+                      Payment Status &amp; Method
                     </dt>
                     <dd className="font-semibold text-emerald-700 mt-0.5 flex items-center gap-1.5">
                       <ShieldCheck className="h-4 w-4" />
                       <span>
                         {form.paymentMethod === "card"
-                          ? "Paid (Dev Mode Card Authorized)"
-                          : "Pay on First Driving Lesson"}
+                          ? "Paid Online via Stripe"
+                          : "Pay on First Driving Lesson (Cash on Spot)"}
                       </span>
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-xs font-medium uppercase tracking-wider text-zinc-400">
+                      Payment Reference
+                    </dt>
+                    <dd className="font-mono text-xs text-zinc-800 mt-0.5">
+                      {form.paymentMethod === "card"
+                        ? "Stripe Verified Electronic Payment"
+                        : "Pay on Spot (Cash / In-Person)"}
                     </dd>
                   </div>
                 </dl>
@@ -399,9 +428,9 @@ export default function BookingsCompletionPage() {
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-zinc-700">
-                    <User className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <Car className="h-4 w-4 text-emerald-600 shrink-0" />
                     <span>
-                      <strong>Instructor:</strong> {form.slotInstructor}
+                      <strong>Vehicle:</strong> Dual-Control Training Vehicle
                     </span>
                   </div>
                 </div>
@@ -624,118 +653,92 @@ export default function BookingsCompletionPage() {
                   </div>
                 </div>
 
-                {/* 3. PAYMENT DETAILS (DEV MODE) */}
+                {/* 3. PAYMENT DETAILS */}
                 <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs space-y-5">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 pb-3">
                     <div>
                       <h3 className="text-base font-bold text-zinc-900 flex items-center gap-2">
                         <CreditCard className="h-4 w-4 text-emerald-600" />
-                        <span>3. Payment Information</span>
+                        <span>3. Payment Method</span>
                       </h3>
                       <p className="text-xs text-zinc-500 mt-0.5">
-                        Choose your preferred payment method below.
+                        Choose how you would like to pay for your driving lesson.
                       </p>
                     </div>
 
-                    {/* Dev mode badge */}
-                    <span className="self-start sm:self-auto rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-800 border border-amber-200">
-                      🛠️ Dev Mode Active
+                    <span className="self-start sm:self-auto rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                      <span>Stripe Protected</span>
                     </span>
                   </div>
 
-                  {/* Dev Mode Banner Callout */}
-                  <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4 text-xs text-amber-900 flex items-start gap-3">
-                    <Sparkles className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                    <div>
-                      <strong>Developer / Test Mode Notice:</strong>
-                      <p className="mt-0.5 text-amber-800">
-                        Payment details can be left completely empty or filled with test numbers. No actual credit card charge will be made.
-                      </p>
-                    </div>
-                  </div>
-
                   {/* Payment Method Selector */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <button
                       type="button"
                       onClick={() => setFields({ paymentMethod: "card" })}
-                      className={`flex items-center gap-3 rounded-xl border p-3.5 text-left transition ${
+                      className={`flex items-start gap-3.5 rounded-xl border p-4 text-left transition ${
                         form.paymentMethod === "card"
-                          ? "border-emerald-600 bg-emerald-50/60 ring-1 ring-emerald-600 font-semibold"
+                          ? "border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-600 shadow-xs"
                           : "border-zinc-200 bg-white hover:bg-zinc-50"
                       }`}
                     >
-                      <CreditCard className="h-5 w-5 text-zinc-700" />
-                      <div>
-                        <p className="text-xs font-bold text-zinc-900">Pay Online (Dev Card)</p>
-                        <p className="text-[11px] text-zinc-500">Instant confirmation</p>
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white mt-0.5">
+                        <CreditCard className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-bold text-zinc-950">Pay Online with Card</p>
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded">
+                            Recommended
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-zinc-500 mt-0.5">
+                          Credit / Debit Card, Apple Pay, Google Pay via Stripe
+                        </p>
                       </div>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setFields({ paymentMethod: "pay_on_arrival" })}
-                      className={`flex items-center gap-3 rounded-xl border p-3.5 text-left transition ${
+                      className={`flex items-start gap-3.5 rounded-xl border p-4 text-left transition ${
                         form.paymentMethod === "pay_on_arrival"
-                          ? "border-emerald-600 bg-emerald-50/60 ring-1 ring-emerald-600 font-semibold"
+                          ? "border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-600 shadow-xs"
                           : "border-zinc-200 bg-white hover:bg-zinc-50"
                       }`}
                     >
-                      <User className="h-5 w-5 text-zinc-700" />
-                      <div>
-                        <p className="text-xs font-bold text-zinc-900">Pay on First Lesson</p>
-                        <p className="text-[11px] text-zinc-500">Cash or Interac e-Transfer</p>
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-white mt-0.5">
+                        <User className="h-4 w-4 text-emerald-400" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-bold text-zinc-950">Pay on First Lesson</p>
+                        <p className="text-[11px] text-zinc-500 mt-0.5">
+                          Cash on spot or Interac e-Transfer directly to instructor
+                        </p>
                       </div>
                     </button>
                   </div>
 
-                  {form.paymentMethod === "card" && (
-                    <div className="space-y-4 pt-2">
+                  {/* Explanatory Callout */}
+                  {form.paymentMethod === "card" ? (
+                    <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 text-xs text-zinc-700 flex items-start gap-3">
+                      <Lock className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
                       <div>
-                        <label htmlFor="cardholderName" className="block text-xs font-semibold text-zinc-700">
-                          Cardholder Name (Optional in Dev Mode)
-                        </label>
-                        <input
-                          type="text"
-                          id="cardholderName"
-                          name="cardholderName"
-                          value={form.cardholderName}
-                          onChange={handleChange}
-                          placeholder="e.g. Navjot Singh"
-                          className="mt-1 block w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none"
-                        />
+                        <strong>Separate Stripe Checkout Page:</strong>
+                        <p className="mt-0.5 text-zinc-600">
+                          Clicking below will save your reservation and take you to our dedicated Stripe checkout page where you can securely complete your payment.
+                        </p>
                       </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="sm:col-span-2">
-                          <label htmlFor="cardNumber" className="block text-xs font-semibold text-zinc-700">
-                            Card Number (Optional in Dev Mode)
-                          </label>
-                          <input
-                            type="text"
-                            id="cardNumber"
-                            name="cardNumber"
-                            value={form.cardNumber}
-                            onChange={handleChange}
-                            placeholder="4242 •••• •••• 4242"
-                            className="mt-1 block w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none"
-                          />
-                        </div>
-
-                        <div>
-                          <label htmlFor="cardExpiry" className="block text-xs font-semibold text-zinc-700">
-                            MM / YY
-                          </label>
-                          <input
-                            type="text"
-                            id="cardExpiry"
-                            name="cardExpiry"
-                            value={form.cardExpiry}
-                            onChange={handleChange}
-                            placeholder="12/28"
-                            className="mt-1 block w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none"
-                          />
-                        </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 text-xs text-zinc-700 flex items-start gap-3">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                      <div>
+                        <strong>Cash on Spot Selected:</strong>
+                        <p className="mt-0.5 text-zinc-600">
+                          Your appointment slot will be confirmed immediately. Please bring exact cash or be prepared to send an e-Transfer upon meetup.
+                        </p>
                       </div>
                     </div>
                   )}
@@ -744,20 +747,30 @@ export default function BookingsCompletionPage() {
                 {/* Final Submit Action */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-zinc-200 pt-6">
                   <div className="text-xs text-zinc-500">
-                    Clicking confirm will record your slot in the instructor schedule.
+                    {form.paymentMethod === "card"
+                      ? "Next step: Secure checkout on Stripe."
+                      : "Clicking confirm will finalize your appointment reservation."}
                   </div>
 
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900 px-9 py-4 text-sm font-bold text-white shadow-md hover:bg-zinc-800 hover:shadow-lg transition active:scale-95 disabled:opacity-50"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-950 px-9 py-4 text-sm font-bold text-white shadow-md hover:bg-zinc-800 hover:shadow-lg transition active:scale-95 disabled:opacity-50 cursor-pointer"
                   >
                     {submitting ? (
                       <Loader2 className="h-4 w-4 animate-spin text-white" />
+                    ) : form.paymentMethod === "card" ? (
+                      <CreditCard className="h-4 w-4 text-emerald-400" />
                     ) : (
                       <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                     )}
-                    <span>{submitting ? "Booking Slot..." : "Confirm & Book Driving Lesson"}</span>
+                    <span>
+                      {submitting
+                        ? "Saving Reservation..."
+                        : form.paymentMethod === "card"
+                        ? "Proceed to Secure Stripe Checkout →"
+                        : "Confirm & Book Driving Lesson (Pay on Spot)"}
+                    </span>
                   </button>
                 </div>
               </form>

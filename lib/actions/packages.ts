@@ -490,17 +490,101 @@ export async function purchasePackageAction(
       paymentMethod: data.paymentMethod,
     });
 
-    logConfirmationEmail({
-      type: "PACKAGE_PURCHASE",
-      to: data.email.trim(),
-      subject: emailTemplate.subject,
-      body: emailTemplate.body,
-    });
+    // Mock Stripe payment transaction
+    try {
+      const { createTransaction } = await import("@/lib/stripe");
+      const numericAmount = Math.max(1, Math.round((Number(data.numericPrice) || 100) * 100));
+      await createTransaction({
+        amount: numericAmount,
+        currency: "cad",
+        paymentMethod: data.paymentMethod || "pm_mock_card",
+      });
+    } catch (stripeErr) {
+      console.warn("Stripe mock transaction log error:", stripeErr);
+    }
 
-    await revalidatePaths(["/", "/packages", "/admin/bookings"]);
+    await revalidatePaths([
+      "/",
+      "/packages",
+      "/admin/bookings",
+      "/admin/purchased-packages",
+    ]);
     return { success: true, orderId: docRef.id };
   } catch (error: any) {
     console.error("purchasePackageAction error:", error);
     return { success: false, error: error?.message || "Failed to process package purchase." };
+  }
+}
+
+export interface PackageOrderItem {
+  id: string;
+  orderId: string;
+  packageId: string;
+  packageName: string;
+  packagePrice: string;
+  numericPrice?: number;
+  duration?: string;
+  lessonsCount?: number;
+  customerName: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  street?: string;
+  city?: string;
+  postCode?: string;
+  licenseNumber?: string;
+  licenseClass?: string;
+  preferredStartDate?: string;
+  additionalNotes?: string;
+  paymentMethod?: string;
+  paymentStatus?: "paid" | "pay_on_arrival" | "pending";
+  createdAt: string;
+}
+
+/**
+ * Fetch all purchased packages from Firestore (package_orders)
+ */
+export async function getPackageOrdersAction(): Promise<PackageOrderItem[]> {
+  try {
+    const snapshot = await db
+      .collection("package_orders")
+      .orderBy("createdAt", "desc")
+      .get();
+
+    const orders: PackageOrderItem[] = [];
+    snapshot.forEach((doc) => {
+      const d = doc.data();
+      orders.push({
+        id: doc.id,
+        orderId: d.orderId || doc.id,
+        packageId: d.packageId || "",
+        packageName: d.packageName || "Driving Package",
+        packagePrice: d.packagePrice || "$0",
+        numericPrice: d.numericPrice || 0,
+        duration: d.duration || "",
+        lessonsCount: d.lessonsCount || 1,
+        customerName: d.customerName || `${d.firstName || ""} ${d.lastName || ""}`.trim() || "Customer",
+        firstName: d.firstName || "",
+        lastName: d.lastName || "",
+        email: d.email || "",
+        phone: d.phone || "",
+        street: d.street || "",
+        city: d.city || "Surrey",
+        postCode: d.postCode || "",
+        licenseNumber: d.licenseNumber || "",
+        licenseClass: d.licenseClass || "",
+        preferredStartDate: d.preferredStartDate || "",
+        additionalNotes: d.additionalNotes || "",
+        paymentMethod: d.paymentMethod || "card",
+        paymentStatus: d.paymentStatus || "paid",
+        createdAt: d.createdAt || new Date().toISOString(),
+      });
+    });
+
+    return orders;
+  } catch (error) {
+    console.error("getPackageOrdersAction error:", error);
+    return [];
   }
 }

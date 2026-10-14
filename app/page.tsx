@@ -105,9 +105,9 @@ export default function Home() {
               {/* Subtitle */}
               <p className="mt-5 text-base sm:text-lg leading-relaxed text-zinc-600 max-w-2xl mx-auto">
                 One-on-one personalized coaching designed for Class 7L, Class
-                7N, and Class 5 drivers. Patient instructors, dual-control safety
-                vehicles, and free doorstep pickup across Surrey, Delta, and
-                Langley.
+                7N, and Class 5 drivers. Patient instructors, dual-control
+                safety vehicles, and free doorstep pickup across Surrey, Delta,
+                Burnaby, Richmond, New Westminster and Langley.
               </p>
 
               {/* Action Buttons */}
