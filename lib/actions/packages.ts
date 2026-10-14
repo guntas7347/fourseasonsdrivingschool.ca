@@ -425,7 +425,7 @@ export interface PurchasePackagePayload {
   preferredStartDate?: string;
   additionalNotes?: string;
   paymentMethod?: string;
-  paymentStatus?: "paid" | "pay_on_arrival" | "pending";
+  paymentStatus?: "paid" | "pay_on_arrival" | "pending" | "pending_payment";
 }
 
 /**
@@ -469,38 +469,29 @@ export async function purchasePackageAction(
       licenseClass: data.licenseClass || "Class 7L",
       preferredStartDate: data.preferredStartDate || "",
       additionalNotes: data.additionalNotes || "",
-      paymentMethod: data.paymentMethod || "card",
-      paymentStatus: data.paymentStatus || "paid",
+      paymentMethod: "card",
+      paymentStatus: data.paymentStatus || "pending_payment",
       createdAt: now,
     };
 
     await docRef.set(orderData);
 
     // Generate and log confirmation email using /lib/email
-    const emailTemplate = generatePackagePurchaseEmail({
-      orderId: docRef.id,
-      customerName: customerFullName,
-      email: data.email.trim(),
-      phone: data.phone.trim(),
-      packageName: data.packageName,
-      packagePrice: data.packagePrice,
-      lessonsCount: data.lessonsCount,
-      duration: data.duration,
-      purchasedAt: now,
-      paymentMethod: data.paymentMethod,
-    });
-
-    // Mock Stripe payment transaction
     try {
-      const { createTransaction } = await import("@/lib/stripe");
-      const numericAmount = Math.max(1, Math.round((Number(data.numericPrice) || 100) * 100));
-      await createTransaction({
-        amount: numericAmount,
-        currency: "cad",
-        paymentMethod: data.paymentMethod || "pm_mock_card",
+      generatePackagePurchaseEmail({
+        orderId: docRef.id,
+        customerName: customerFullName,
+        email: data.email.trim(),
+        phone: data.phone.trim(),
+        packageName: data.packageName,
+        packagePrice: data.packagePrice,
+        lessonsCount: data.lessonsCount,
+        duration: data.duration,
+        purchasedAt: now,
+        paymentMethod: "card",
       });
-    } catch (stripeErr) {
-      console.warn("Stripe mock transaction log error:", stripeErr);
+    } catch (e) {
+      console.warn("Package purchase email log error:", e);
     }
 
     await revalidatePaths([
@@ -537,13 +528,18 @@ export interface PackageOrderItem {
   licenseClass?: string;
   preferredStartDate?: string;
   additionalNotes?: string;
+  status?: "Online" | string;
   paymentMethod?: string;
-  paymentStatus?: "paid" | "pay_on_arrival" | "pending";
+  paymentStatus: "paid" | "pay_on_arrival" | "pending" | "pending_payment";
+  paymentIntentId?: string;
+  cardLast4?: string;
+  paidAt?: string;
   createdAt: string;
 }
 
 /**
  * Fetch all purchased packages from Firestore (package_orders)
+ * Packages can only be purchased online via Stripe. Only paid packages are returned.
  */
 export async function getPackageOrdersAction(): Promise<PackageOrderItem[]> {
   try {
@@ -555,36 +551,128 @@ export async function getPackageOrdersAction(): Promise<PackageOrderItem[]> {
     const orders: PackageOrderItem[] = [];
     snapshot.forEach((doc) => {
       const d = doc.data();
-      orders.push({
-        id: doc.id,
-        orderId: d.orderId || doc.id,
-        packageId: d.packageId || "",
-        packageName: d.packageName || "Driving Package",
-        packagePrice: d.packagePrice || "$0",
-        numericPrice: d.numericPrice || 0,
-        duration: d.duration || "",
-        lessonsCount: d.lessonsCount || 1,
-        customerName: d.customerName || `${d.firstName || ""} ${d.lastName || ""}`.trim() || "Customer",
-        firstName: d.firstName || "",
-        lastName: d.lastName || "",
-        email: d.email || "",
-        phone: d.phone || "",
-        street: d.street || "",
-        city: d.city || "Surrey",
-        postCode: d.postCode || "",
-        licenseNumber: d.licenseNumber || "",
-        licenseClass: d.licenseClass || "",
-        preferredStartDate: d.preferredStartDate || "",
-        additionalNotes: d.additionalNotes || "",
-        paymentMethod: d.paymentMethod || "card",
-        paymentStatus: d.paymentStatus || "paid",
-        createdAt: d.createdAt || new Date().toISOString(),
-      });
+      const isPaid = d.paymentStatus === "paid" || Boolean(d.paymentIntentId) || Boolean(d.paidAt);
+      
+      // Packages can only be purchased online. Only include paid packages.
+      if (isPaid) {
+        orders.push({
+          id: doc.id,
+          orderId: d.orderId || doc.id,
+          packageId: d.packageId || "",
+          packageName: d.packageName || "Driving Package",
+          packagePrice: d.packagePrice || "$0",
+          numericPrice: d.numericPrice || 0,
+          duration: d.duration || "",
+          lessonsCount: d.lessonsCount || 1,
+          customerName: d.customerName || `${d.firstName || ""} ${d.lastName || ""}`.trim() || "Customer",
+          firstName: d.firstName || "",
+          lastName: d.lastName || "",
+          email: d.email || "",
+          phone: d.phone || "",
+          street: d.street || "",
+          city: d.city || "Surrey",
+          postCode: d.postCode || "",
+          licenseNumber: d.licenseNumber || "",
+          licenseClass: d.licenseClass || "",
+          preferredStartDate: d.preferredStartDate || "",
+          additionalNotes: d.additionalNotes || "",
+          status: "Online",
+          paymentMethod: d.paymentMethod || "stripe_card",
+          paymentStatus: "paid",
+          paymentIntentId: d.paymentIntentId || "",
+          cardLast4: d.cardLast4 || "",
+          paidAt: d.paidAt || "",
+          createdAt: d.createdAt || new Date().toISOString(),
+        });
+      }
     });
 
     return orders;
   } catch (error) {
     console.error("getPackageOrdersAction error:", error);
     return [];
+  }
+}
+
+/**
+ * Fetch a single package order by ID
+ */
+export async function getPackageOrderByIdAction(orderId: string): Promise<PackageOrderItem | null> {
+  try {
+    if (!orderId) return null;
+    const doc = await db.collection("package_orders").doc(orderId).get();
+    if (!doc.exists) return null;
+
+    const d = doc.data()!;
+    return {
+      id: doc.id,
+      orderId: d.orderId || doc.id,
+      packageId: d.packageId || "",
+      packageName: d.packageName || "Driving Package",
+      packagePrice: d.packagePrice || "$0",
+      numericPrice: d.numericPrice || 0,
+      duration: d.duration || "",
+      lessonsCount: d.lessonsCount || 1,
+      customerName: d.customerName || `${d.firstName || ""} ${d.lastName || ""}`.trim() || "Customer",
+      firstName: d.firstName || "",
+      lastName: d.lastName || "",
+      email: d.email || "",
+      phone: d.phone || "",
+      street: d.street || "",
+      city: d.city || "Surrey",
+      postCode: d.postCode || "",
+      licenseNumber: d.licenseNumber || "",
+      licenseClass: d.licenseClass || "",
+      preferredStartDate: d.preferredStartDate || "",
+      additionalNotes: d.additionalNotes || "",
+      paymentMethod: d.paymentMethod || "card",
+      paymentStatus: d.paymentStatus || "pending_payment",
+      paymentIntentId: d.paymentIntentId || "",
+      cardLast4: d.cardLast4 || "",
+      paidAt: d.paidAt || "",
+      createdAt: d.createdAt || new Date().toISOString(),
+    };
+  } catch (err) {
+    console.error("getPackageOrderByIdAction error:", err);
+    return null;
+  }
+}
+
+/**
+ * Mark a package order as paid in Firestore (called upon Stripe payment confirmation)
+ */
+export async function markPackageOrderPaidAction(params: {
+  orderId: string;
+  paymentIntentId?: string;
+  cardLast4?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!params.orderId) throw new Error("Missing package order ID");
+    const now = new Date().toISOString();
+
+    await db.collection("package_orders").doc(params.orderId).set(
+      {
+        status: "Online",
+        paymentStatus: "paid",
+        paymentMethod: "stripe_card",
+        paymentIntentId: params.paymentIntentId || "",
+        cardLast4: params.cardLast4 || "",
+        paidAt: now,
+      },
+      { merge: true }
+    );
+
+    await revalidatePaths([
+      "/",
+      "/packages",
+      "/admin/purchased-packages",
+      "/admin/bookings",
+      "/admin/transactions",
+    ]);
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("markPackageOrderPaidAction error:", error);
+    return { success: false, error: error?.message || "Failed to update package order status" };
   }
 }

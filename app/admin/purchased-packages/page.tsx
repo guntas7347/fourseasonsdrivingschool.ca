@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
+import Link from "next/link";
 import { getPackageOrdersAction, PackageOrderItem } from "@/lib/actions/packages";
 import { exportToCsv } from "@/lib/exportCsv";
 import {
@@ -16,8 +17,8 @@ import {
   CreditCard,
   Loader2,
   CheckCircle2,
-  Clock,
   Package,
+  Globe,
 } from "lucide-react";
 
 const PAGE_SIZE = 20;
@@ -43,7 +44,7 @@ export default function AdminPurchasedPackagesPage() {
     loadOrders();
   }, []);
 
-  // Filtered orders based on search
+  // Filtered orders based on search query (including payment ID)
   const filteredOrders = useMemo(() => {
     if (!searchQuery.trim()) return orders;
     const q = searchQuery.toLowerCase();
@@ -53,7 +54,8 @@ export default function AdminPurchasedPackagesPage() {
         o.email.toLowerCase().includes(q) ||
         o.phone.includes(q) ||
         o.packageName.toLowerCase().includes(q) ||
-        o.orderId.toLowerCase().includes(q)
+        o.orderId.toLowerCase().includes(q) ||
+        (o.paymentIntentId && o.paymentIntentId.toLowerCase().includes(q))
     );
   }, [orders, searchQuery]);
 
@@ -77,8 +79,8 @@ export default function AdminPurchasedPackagesPage() {
       "Price",
       "Lessons Count",
       "Preferred Start Date",
-      "Payment Method",
       "Payment Status",
+      "Payment Transaction ID",
       "Notes",
     ];
 
@@ -93,8 +95,8 @@ export default function AdminPurchasedPackagesPage() {
       o.packagePrice,
       o.lessonsCount || 1,
       o.preferredStartDate || "Flexible",
-      o.paymentMethod || "card",
-      o.paymentStatus || "paid",
+      "Paid",
+      o.paymentIntentId || "N/A",
       o.additionalNotes || "",
     ]);
 
@@ -110,7 +112,7 @@ export default function AdminPurchasedPackagesPage() {
             Purchased Packages
           </h1>
           <p className="mt-1 text-sm text-zinc-500">
-            All driving lesson packages purchased by clients online and through management.
+            Confirmed driving packages purchased securely online via Stripe.
           </p>
         </div>
 
@@ -120,7 +122,7 @@ export default function AdminPurchasedPackagesPage() {
             type="button"
             onClick={handleExportCsv}
             disabled={currentItems.length === 0}
-            className="inline-flex items-center gap-2 rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-xs font-semibold text-zinc-800 shadow-xs hover:bg-zinc-50 hover:border-zinc-400 disabled:opacity-50 transition active:scale-95"
+            className="inline-flex items-center gap-2 rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-xs font-semibold text-zinc-800 shadow-xs hover:bg-zinc-50 hover:border-zinc-400 disabled:opacity-50 transition active:scale-95 cursor-pointer"
             title="Export current page table data to Excel CSV"
           >
             <Download className="h-4 w-4 text-emerald-600" />
@@ -135,7 +137,7 @@ export default function AdminPurchasedPackagesPage() {
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
           <input
             type="text"
-            placeholder="Search by student, email, phone, or package..."
+            placeholder="Search by student, email, phone, payment ID..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -159,11 +161,11 @@ export default function AdminPurchasedPackagesPage() {
       ) : totalItems === 0 ? (
         <div className="rounded-2xl border border-zinc-200 bg-white p-12 text-center">
           <ShoppingBag className="mx-auto h-12 w-12 text-zinc-300" />
-          <h3 className="mt-3 text-base font-bold text-zinc-900">No Purchased Packages Found</h3>
+          <h3 className="mt-3 text-base font-bold text-zinc-900">No Packages Found</h3>
           <p className="mt-1 text-xs text-zinc-500">
             {searchQuery
-              ? "No packages match your search query."
-              : "When clients purchase packages online, their orders will appear here."}
+              ? "No purchased packages match your search query."
+              : "When customers purchase driving packages online, their orders will appear here."}
           </p>
         </div>
       ) : (
@@ -176,7 +178,7 @@ export default function AdminPurchasedPackagesPage() {
                   <th className="px-5 py-3.5">Package Purchased</th>
                   <th className="px-5 py-3.5">Price &amp; Lessons</th>
                   <th className="px-5 py-3.5">Start Date &amp; City</th>
-                  <th className="px-5 py-3.5">Payment</th>
+                  <th className="px-5 py-3.5">Payment Status &amp; Transaction ID</th>
                   <th className="px-5 py-3.5">Date</th>
                 </tr>
               </thead>
@@ -238,18 +240,34 @@ export default function AdminPurchasedPackagesPage() {
                       </p>
                     </td>
 
-                    {/* Payment Status */}
+                    {/* Payment Status & Payment ID (Paid Only, with Stripe Transaction ID) */}
                     <td className="px-5 py-4">
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                          order.paymentStatus === "paid"
-                            ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                            : "bg-amber-50 text-amber-800 border border-amber-200"
-                        }`}
-                      >
-                        <CheckCircle2 className="h-3 w-3" />
-                        <span>{order.paymentStatus === "paid" ? "Paid (Card)" : "Pay on Arrival"}</span>
-                      </span>
+                      <div className="space-y-1.5">
+                        {/* Status: Paid */}
+                        <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                          <CheckCircle2 className="h-3 w-3 text-emerald-700" />
+                          <span>Paid</span>
+                        </span>
+
+                        {/* Payment Transaction ID */}
+                        {order.paymentIntentId ? (
+                          <div>
+                            <Link
+                              href={`/admin/transactions?search=${encodeURIComponent(order.paymentIntentId)}`}
+                              title={`View Stripe Transaction ${order.paymentIntentId}`}
+                              className="inline-flex items-center gap-1 text-[10px] font-mono font-medium text-zinc-600 hover:text-emerald-700 bg-zinc-100 hover:bg-emerald-50 px-2 py-0.5 rounded border border-zinc-200 transition"
+                            >
+                              <CreditCard className="h-3 w-3 text-emerald-600 shrink-0" />
+                              <span className="truncate max-w-[130px]">{order.paymentIntentId}</span>
+                            </Link>
+                          </div>
+                        ) : (
+                          <p className="text-[10px] text-emerald-700 font-medium">
+                            Stripe Payment Verified
+                          </p>
+                        )}
+                      </div>
                     </td>
 
                     {/* Date Purchased */}
@@ -278,7 +296,7 @@ export default function AdminPurchasedPackagesPage() {
                   type="button"
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={pageSafe <= 1}
-                  className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-40 transition"
+                  className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-40 transition cursor-pointer"
                 >
                   <ChevronLeft className="h-4 w-4" />
                   <span>Previous</span>
@@ -287,7 +305,7 @@ export default function AdminPurchasedPackagesPage() {
                   type="button"
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   disabled={pageSafe >= totalPages}
-                  className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-40 transition"
+                  className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-40 transition cursor-pointer"
                 >
                   <span>Next</span>
                   <ChevronRight className="h-4 w-4" />

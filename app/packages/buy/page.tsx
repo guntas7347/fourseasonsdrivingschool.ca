@@ -22,6 +22,7 @@ import {
   Printer,
   Sparkles,
   Award,
+  Lock,
 } from "lucide-react";
 
 interface PackagePurchaseFormFields {
@@ -160,13 +161,14 @@ function PackagePurchaseContent() {
         licenseClass: form.licenseClass,
         preferredStartDate: form.preferredStartDate,
         additionalNotes: form.additionalNotes,
-        paymentMethod: form.paymentMethod,
-        paymentStatus: form.paymentMethod === "card" ? "paid" : "pay_on_arrival",
+        paymentMethod: "card",
+        paymentStatus: "pending_payment",
       });
 
       if (res.success && res.orderId) {
-        setConfirmedOrderId(res.orderId);
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        // Redirect directly to Stripe checkout page with type=package
+        router.push(`/checkout?bookingId=${res.orderId}&type=package`);
+        return;
       } else {
         setErrorMessage(res.error || "Failed to process package purchase.");
       }
@@ -526,102 +528,37 @@ function PackagePurchaseContent() {
               </div>
             </div>
 
-            {/* Payment Details (Dev Mode Simulation) */}
+            {/* Payment Details - Stripe Only, No Cash */}
             <div className="border-t border-zinc-200/80 pt-6 space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-900">
                   Payment Method
                 </span>
-                <span className="text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                  Dev Mode Active
+                <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  Stripe Elements
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <label
-                  className={`flex items-center gap-2 rounded-xl border p-3 cursor-pointer transition ${
-                    form.paymentMethod === "card"
-                      ? "border-zinc-900 bg-zinc-50 font-semibold"
-                      : "border-zinc-200 hover:bg-zinc-50"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="card"
-                    checked={form.paymentMethod === "card"}
-                    onChange={() => setFields({ paymentMethod: "card" })}
-                    className="text-zinc-900 focus:ring-zinc-900"
-                  />
-                  <CreditCard className="h-4 w-4 text-zinc-700" />
-                  <span className="text-xs">Credit Card</span>
-                </label>
-
-                <label
-                  className={`flex items-center gap-2 rounded-xl border p-3 cursor-pointer transition ${
-                    form.paymentMethod === "pay_on_arrival"
-                      ? "border-zinc-900 bg-zinc-50 font-semibold"
-                      : "border-zinc-200 hover:bg-zinc-50"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="pay_on_arrival"
-                    checked={form.paymentMethod === "pay_on_arrival"}
-                    onChange={() => setFields({ paymentMethod: "pay_on_arrival" })}
-                    className="text-zinc-900 focus:ring-zinc-900"
-                  />
-                  <span className="text-xs">Pay on First Lesson</span>
-                </label>
-              </div>
-
-              {form.paymentMethod === "card" && (
-                <div className="space-y-3 rounded-2xl border border-zinc-200 bg-zinc-50/60 p-4">
-                  <div>
-                    <label htmlFor="cardNumber" className="block text-[11px] font-medium text-zinc-700">
-                      Card Number
-                    </label>
-                    <input
-                      type="text"
-                      id="cardNumber"
-                      name="cardNumber"
-                      value={form.cardNumber}
-                      onChange={handleChange}
-                      placeholder="4242 •••• •••• 4242"
-                      className="mt-1 block w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-mono text-zinc-900 focus:border-zinc-900 focus:outline-none"
-                    />
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-zinc-950 text-white">
+                    <CreditCard className="h-4 w-4 text-emerald-400" />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label htmlFor="cardExpiry" className="block text-[11px] font-medium text-zinc-700">
-                        Expiry (MM/YY)
-                      </label>
-                      <input
-                        type="text"
-                        id="cardExpiry"
-                        name="cardExpiry"
-                        value={form.cardExpiry}
-                        onChange={handleChange}
-                        className="mt-1 block w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-mono text-zinc-900 focus:border-zinc-900 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="cardCvc" className="block text-[11px] font-medium text-zinc-700">
-                        CVC
-                      </label>
-                      <input
-                        type="text"
-                        id="cardCvc"
-                        name="cardCvc"
-                        value={form.cardCvc}
-                        onChange={handleChange}
-                        className="mt-1 block w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-mono text-zinc-900 focus:border-zinc-900 focus:outline-none"
-                      />
-                    </div>
+                  <div>
+                    <p className="text-xs font-bold text-zinc-950">Credit or Debit Card</p>
+                    <p className="text-[11px] text-zinc-500">
+                      Visa, Mastercard, AMEX, Apple Pay, Google Pay
+                    </p>
                   </div>
                 </div>
-              )}
+
+                <div className="border-t border-emerald-200/60 pt-2 text-[11px] text-zinc-600 flex items-start gap-2">
+                  <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>
+                    Package payments are securely processed online via Stripe Elements. Cash on arrival is not available for package bundles.
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Submit button */}
@@ -629,7 +566,7 @@ function PackagePurchaseContent() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-zinc-900 py-4 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:bg-zinc-800 transition active:scale-98 disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-zinc-900 py-4 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:bg-zinc-800 transition active:scale-98 disabled:opacity-50 cursor-pointer"
               >
                 {submitting ? (
                   <Loader2 className="h-4 w-4 animate-spin text-white" />
@@ -638,12 +575,13 @@ function PackagePurchaseContent() {
                 )}
                 <span>
                   {submitting
-                    ? "Processing Package Purchase..."
-                    : `Confirm & Buy Package (${selectedPackage?.price || "$110"} CAD)`}
+                    ? "Initializing Stripe Checkout..."
+                    : `Continue to Payment (${selectedPackage?.price || "$110"} CAD) →`}
                 </span>
               </button>
-              <p className="mt-2 text-center text-[11px] text-zinc-400">
-                🔒 256-bit encrypted checkout. An instant confirmation email will be generated.
+              <p className="mt-2 text-center text-[11px] text-zinc-400 flex items-center justify-center gap-1.5">
+                <Lock className="h-3 w-3 text-zinc-400" />
+                <span>256-bit SSL encrypted checkout powered by Stripe</span>
               </p>
             </div>
           </form>

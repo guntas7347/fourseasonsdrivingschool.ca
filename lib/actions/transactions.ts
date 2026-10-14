@@ -9,7 +9,7 @@ export type Transaction = {
   id: string; // pi_... or re_...
   type: TransactionType; // "payment" | "refund"
   referenceId: string | null; // For payment: bookingId. For refund: parent paymentIntentId (pi_...)
-  referenceType: "booking" | "payment" | null;
+  referenceType: "booking" | "package" | "payment" | null;
   amount: number; // in cents
   currency: string;
   status: string; // "succeeded", "requires_payment_method", "processing", "canceled", "failed"
@@ -18,7 +18,6 @@ export type Transaction = {
   customerEmail: string | null;
   customerName: string | null;
   description: string | null;
-  bookingId: string | null; // backward compatibility
   paymentMethod: string | null;
   cardBrand: string | null;
   cardLast4: string | null;
@@ -56,13 +55,35 @@ function mapPaymentIntent(payment: Stripe.PaymentIntent): Transaction {
     payment.metadata?.customerName ||
     null;
 
-  const bookingId = payment.metadata?.bookingId || null;
+  let bookingId =
+    payment.metadata?.bookingId ||
+    payment.metadata?.booking_id ||
+    charge?.metadata?.bookingId ||
+    charge?.metadata?.booking_id ||
+    null;
+
+  const rawType =
+    payment.metadata?.type ||
+    charge?.metadata?.type ||
+    (payment.description?.toLowerCase().includes("package") ? "package" : "slot");
+
+  // Fallback: extract booking/order ID from description (e.g., #bXCKVHgBZQFW43TFTpK2)
+  if (!bookingId) {
+    const descText = payment.description || charge?.description || "";
+    const match = descText.match(/#([a-zA-Z0-9_-]+)/);
+    if (match && match[1] && match[1] !== "direct") {
+      bookingId = match[1];
+    }
+  }
+
+  const referenceType: "booking" | "package" | null =
+    rawType === "package" ? "package" : bookingId ? "booking" : null;
 
   return {
     id: payment.id,
     type: "payment",
     referenceId: bookingId,
-    referenceType: "booking",
+    referenceType,
     amount: payment.amount,
     currency: payment.currency,
     status: payment.status,
@@ -74,7 +95,6 @@ function mapPaymentIntent(payment: Stripe.PaymentIntent): Transaction {
     customerEmail,
     customerName,
     description: payment.description || null,
-    bookingId,
     paymentMethod:
       typeof payment.payment_method === "string"
         ? payment.payment_method
@@ -130,7 +150,6 @@ function mapStripeRefund(
     description: refund.reason
       ? `Refund (${refund.reason.replace(/_/g, " ")}) for ${parentPiId || "payment"}`
       : `Refund for ${parentPiId || "payment"}`,
-    bookingId: parentPayment?.metadata?.bookingId || null,
     paymentMethod: "card",
     cardBrand: cardDetails?.brand || null,
     cardLast4: cardDetails?.last4 || null,
@@ -150,9 +169,73 @@ export async function getTransactions(
 ): Promise<TransactionsResult> {
   const safeLimit = Math.min(Math.max(1, limit), 100);
 
-  // 1. If searchId is provided, look up the payment intent or refund directly
+  // 1. If searchId is provided, look up by session, payment intent, or refund directly
   const cleanSearch = searchId?.trim();
   if (cleanSearch) {
+    // If it starts with "cs_", search Stripe Checkout Sessions
+    if (cleanSearch.startsWith("cs_")) {
+      try {
+        const session = await stripe.checkout.sessions.retrieve(cleanSearch, {
+          expand: ["payment_intent", "payment_intent.latest_charge", "payment_intent.latest_charge.refunds"],
+        });
+
+        if (session) {
+          const pi = session.payment_intent as Stripe.PaymentIntent | null;
+          if (pi) {
+            const rows: Transaction[] = [mapPaymentIntent(pi)];
+            const charge =
+              typeof pi.latest_charge === "object" && pi.latest_charge !== null
+                ? (pi.latest_charge as Stripe.Charge)
+                : null;
+
+            if (charge?.refunds?.data) {
+              for (const ref of charge.refunds.data) {
+                rows.push(mapStripeRefund(ref, pi));
+              }
+            }
+            return {
+              data: rows,
+              hasMore: false,
+              nextCursor: null,
+              prevCursor: null,
+            };
+          } else {
+            // Standalone session row
+            return {
+              data: [
+                {
+                  id: session.id,
+                  type: "payment",
+                  referenceId: session.metadata?.bookingId || null,
+                  referenceType: "booking",
+                  amount: session.amount_total || 0,
+                  currency: session.currency || "cad",
+                  status: session.payment_status === "paid" ? "succeeded" : session.status || "pending",
+                  created: session.created,
+                  customer: typeof session.customer === "string" ? session.customer : (session.customer?.id ?? null),
+                  customerEmail: session.customer_details?.email || session.metadata?.customerEmail || null,
+                  customerName: session.customer_details?.name || session.metadata?.customerName || null,
+                  description: `Stripe Checkout Session #${session.id.slice(0, 10)}`,
+                  paymentMethod: "card",
+                  cardBrand: null,
+                  cardLast4: null,
+                  receiptUrl: null,
+                  refundReason: null,
+                  refunded: false,
+                  amountRefunded: 0,
+                },
+              ],
+              hasMore: false,
+              nextCursor: null,
+              prevCursor: null,
+            };
+          }
+        }
+      } catch (err: any) {
+        console.warn("Could not retrieve Checkout Session with ID:", cleanSearch);
+      }
+    }
+
     // If it starts with "re_", search Stripe refunds
     if (cleanSearch.startsWith("re_")) {
       try {
@@ -335,12 +418,13 @@ export async function getTransactions(
 }
 
 /**
- * Server action to create a Stripe PaymentIntent directly without an API route
+ * Server action to create a Stripe Checkout Session using the modern Elements mode (ui_mode: "elements")
  */
-export async function createPaymentIntentAction({
+export async function createCheckoutSessionAction({
   amount,
   currency = "cad",
   bookingId,
+  type = "slot",
   customerName,
   customerEmail,
   description,
@@ -349,6 +433,7 @@ export async function createPaymentIntentAction({
   amount: number | string;
   currency?: string;
   bookingId?: string;
+  type?: "slot" | "package";
   customerName?: string;
   customerEmail?: string;
   description?: string;
@@ -356,13 +441,12 @@ export async function createPaymentIntentAction({
 }): Promise<{
   success: boolean;
   clientSecret?: string | null;
-  id?: string;
+  sessionId?: string;
   amount?: number;
   currency?: string;
   error?: string;
 }> {
   try {
-    // Parse amount to integer cents (e.g., $110 -> 11000 cents)
     let amountInCents = 11000;
     if (typeof amount === "number") {
       amountInCents = amount > 1000 ? Math.round(amount) : Math.round(amount * 100);
@@ -373,42 +457,65 @@ export async function createPaymentIntentAction({
       }
     }
 
-    // Safety minimum: $1 CAD = 100 cents
     if (amountInCents < 100) {
       amountInCents = 11000;
     }
 
     const metadataPayload: Record<string, string> = {
       ...metadata,
+      bookingId: bookingId || "",
+      type: type || "slot",
     };
-    if (bookingId) metadataPayload.bookingId = String(bookingId);
     if (customerEmail) metadataPayload.customerEmail = String(customerEmail);
     if (customerName) metadataPayload.customerName = String(customerName);
 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amountInCents,
-      currency: (currency || "cad").toLowerCase(),
-      description:
-        description ||
-        `Four Seasons Driving Lesson Booking #${bookingId || "direct"}`,
-      automatic_payment_methods: {
-        enabled: true,
-      },
+    const productName =
+      description ||
+      (type === "package"
+        ? `Four Seasons Driving Package #${bookingId || "direct"}`
+        : `Four Seasons Driving Lesson #${bookingId || "direct"}`);
+
+    const origin =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+
+    const session = await stripe.checkout.sessions.create({
+      ui_mode: "elements",
+      mode: "payment",
+      customer_email: customerEmail || undefined,
+      line_items: [
+        {
+          price_data: {
+            currency: (currency || "cad").toLowerCase(),
+            product_data: {
+              name: productName,
+              description: `Four Seasons Driving School - ${productName}`,
+            },
+            unit_amount: amountInCents,
+          },
+          quantity: 1,
+        },
+      ],
       metadata: metadataPayload,
+      payment_intent_data: {
+        metadata: metadataPayload,
+        description: productName,
+      },
+      return_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&bookingId=${bookingId || ""}&type=${type || "slot"}`,
     });
 
     return {
       success: true,
-      clientSecret: paymentIntent.client_secret,
-      id: paymentIntent.id,
-      amount: paymentIntent.amount,
-      currency: paymentIntent.currency,
+      clientSecret: session.client_secret,
+      sessionId: session.id,
+      amount: amountInCents,
+      currency: (currency || "cad").toLowerCase(),
     };
   } catch (err: any) {
-    console.error("createPaymentIntentAction error:", err);
+    console.error("createCheckoutSessionAction error:", err);
     return {
       success: false,
-      error: err?.message || "Failed to initialize Stripe payment",
+      error: err?.message || "Failed to initialize Stripe Checkout Session",
     };
   }
 }

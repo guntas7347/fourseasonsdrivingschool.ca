@@ -30,6 +30,7 @@ export interface BookingItem {
   roadTestDate?: string;
   roadTestLocation?: string;
   additionalNotes?: string;
+  status?: "Online" | "Manual";
   paymentMethod?: string;
   paymentStatus: "paid" | "pending_dev_mode" | "pay_on_arrival" | "pending_payment" | "refunded";
   paymentIntentId?: string;
@@ -131,35 +132,54 @@ export async function getBookingsAction(): Promise<BookingItem[]> {
 
     snapshot.forEach((doc) => {
       const data = doc.data();
-      bookings.push({
-        id: doc.id, // Always use doc.id
-        firstName: data.firstName || "",
-        lastName: data.lastName || "",
-        email: data.email || "",
-        phone: data.phone || "",
-        street: data.street || "",
-        city: data.city || "",
-        postCode: data.postCode || "",
-        licenseNumber: data.licenseNumber || "",
-        licenseClass: data.licenseClass || "",
-        licenseExpiry: data.licenseExpiry || "",
-        packageId: data.packageId || "",
-        packageName: data.packageName || "",
-        packagePrice: data.packagePrice || "",
-        slotId: data.slotId || "",
-        slotDate: data.slotDate || "",
-        slotTime: data.slotTime || "",
-        slotInstructor: data.slotInstructor || "",
-        alreadyPurchased: data.alreadyPurchased || "no",
-        bookedRoadTest: data.bookedRoadTest || "no",
-        roadTestDate: data.roadTestDate,
-        roadTestLocation: data.roadTestLocation,
-        additionalNotes: data.additionalNotes,
-        paymentMethod: data.paymentMethod || "dev_card",
-        paymentStatus: data.paymentStatus || "pending_dev_mode",
-        cardLast4: data.cardLast4,
-        createdAt: data.createdAt || "",
-      });
+      const rawStatus = data.status;
+
+      // Infer status if not explicitly set on legacy documents
+      const resolvedStatus: "Online" | "Manual" | undefined =
+        rawStatus === "Online" || rawStatus === "Manual"
+          ? rawStatus
+          : data.paymentIntentId || data.paymentStatus === "paid"
+          ? "Online"
+          : data.paymentStatus === "pay_on_arrival" ||
+            data.street === "Office / Manual Booking" ||
+            data.additionalNotes?.includes("Manual admin")
+          ? "Manual"
+          : undefined;
+
+      // Only show bookings that have status 'Online' or 'Manual'
+      if (resolvedStatus === "Online" || resolvedStatus === "Manual") {
+        bookings.push({
+          id: doc.id,
+          firstName: data.firstName || "",
+          lastName: data.lastName || "",
+          email: data.email || "",
+          phone: data.phone || "",
+          street: data.street || "",
+          city: data.city || "",
+          postCode: data.postCode || "",
+          licenseNumber: data.licenseNumber || "",
+          licenseClass: data.licenseClass || "",
+          licenseExpiry: data.licenseExpiry || "",
+          packageId: data.packageId || "",
+          packageName: data.packageName || "",
+          packagePrice: data.packagePrice || "",
+          slotId: data.slotId || "",
+          slotDate: data.slotDate || "",
+          slotTime: data.slotTime || "",
+          slotInstructor: data.slotInstructor || "",
+          alreadyPurchased: data.alreadyPurchased || "no",
+          bookedRoadTest: data.bookedRoadTest || "no",
+          roadTestDate: data.roadTestDate,
+          roadTestLocation: data.roadTestLocation,
+          additionalNotes: data.additionalNotes,
+          status: resolvedStatus,
+          paymentMethod: data.paymentMethod || "card",
+          paymentStatus: data.paymentStatus || "paid",
+          paymentIntentId: data.paymentIntentId || "",
+          cardLast4: data.cardLast4,
+          createdAt: data.createdAt || "",
+        });
+      }
     });
 
     return bookings;
@@ -202,8 +222,10 @@ export async function getBookingByIdAction(id: string): Promise<BookingItem | nu
       roadTestDate: data.roadTestDate,
       roadTestLocation: data.roadTestLocation,
       additionalNotes: data.additionalNotes,
+      status: data.status,
       paymentMethod: data.paymentMethod || "card",
       paymentStatus: data.paymentStatus || "pending_payment",
+      paymentIntentId: data.paymentIntentId || "",
       cardLast4: data.cardLast4,
       createdAt: data.createdAt || "",
     };
@@ -227,6 +249,7 @@ export async function markBookingPaidAction(params: {
 
     await db.collection("bookings").doc(params.bookingId).set(
       {
+        status: "Online",
         paymentStatus: "paid",
         paymentMethod: "stripe_card",
         paymentIntentId: params.paymentIntentId || "",

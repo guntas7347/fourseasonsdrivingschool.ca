@@ -164,12 +164,9 @@ export default function BookingsCompletionPage() {
         roadTestDate: form.roadTestDate,
         roadTestLocation: form.roadTestLocation,
         additionalNotes: form.additionalNotes,
-        paymentMethod: form.paymentMethod,
-        paymentStatus:
-          form.paymentMethod === "card"
-            ? ("pending_payment" as const)
-            : ("pay_on_arrival" as const),
-        cardLast4: form.paymentMethod === "card" ? "stripe" : "cash",
+        paymentMethod: "card",
+        paymentStatus: "pending_payment" as const,
+        cardLast4: "stripe",
       };
 
       console.log("==================================================");
@@ -182,26 +179,18 @@ export default function BookingsCompletionPage() {
       if (res.success && res.bookingId) {
         if (typeof window !== "undefined") {
           sessionStorage.removeItem("fourseasons_booking_draft");
+          sessionStorage.setItem(
+            "fourseasons_checkout_booking",
+            JSON.stringify({
+              ...bookingPayload,
+              id: res.bookingId,
+            })
+          );
         }
 
-        // If paying online with Stripe, redirect to separate checkout page
-        if (form.paymentMethod === "card") {
-          if (typeof window !== "undefined") {
-            sessionStorage.setItem(
-              "fourseasons_checkout_booking",
-              JSON.stringify({
-                ...bookingPayload,
-                id: res.bookingId,
-              })
-            );
-          }
-          router.push(`/checkout?bookingId=${res.bookingId}`);
-          return;
-        }
-
-        // Pay on arrival: complete on current page
-        setConfirmedBookingId(res.bookingId);
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        // Redirect directly to separate checkout page with type=slot
+        router.push(`/checkout?bookingId=${res.bookingId}&type=slot`);
+        return;
       } else {
         setErrorMessage(res.error || "Failed to process booking reservation.");
       }
@@ -662,94 +651,43 @@ export default function BookingsCompletionPage() {
                         <span>3. Payment Method</span>
                       </h3>
                       <p className="text-xs text-zinc-500 mt-0.5">
-                        Choose how you would like to pay for your driving lesson.
+                        Lesson appointments are confirmed and locked in via secure Stripe card checkout.
                       </p>
                     </div>
 
                     <span className="self-start sm:self-auto rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 border border-emerald-200 flex items-center gap-1">
                       <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                      <span>Stripe Protected</span>
+                      <span>Stripe 256-Bit SSL</span>
                     </span>
                   </div>
 
-                  {/* Payment Method Selector */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <button
-                      type="button"
-                      onClick={() => setFields({ paymentMethod: "card" })}
-                      className={`flex items-start gap-3.5 rounded-xl border p-4 text-left transition ${
-                        form.paymentMethod === "card"
-                          ? "border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-600 shadow-xs"
-                          : "border-zinc-200 bg-white hover:bg-zinc-50"
-                      }`}
-                    >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white mt-0.5">
-                        <CreditCard className="h-4 w-4" />
+                  {/* Payment Method - Stripe Card Only */}
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-zinc-950 text-white">
+                        <CreditCard className="h-4 w-4 text-emerald-400" />
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-bold text-zinc-950">Pay Online with Card</p>
-                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded">
-                            Recommended
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-zinc-500 mt-0.5">
-                          Credit / Debit Card, Apple Pay, Google Pay via Stripe
+                      <div>
+                        <p className="text-xs font-bold text-zinc-950">Credit or Debit Card</p>
+                        <p className="text-[11px] text-zinc-500">
+                          Visa, Mastercard, American Express, Apple Pay, Google Pay
                         </p>
                       </div>
-                    </button>
+                    </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setFields({ paymentMethod: "pay_on_arrival" })}
-                      className={`flex items-start gap-3.5 rounded-xl border p-4 text-left transition ${
-                        form.paymentMethod === "pay_on_arrival"
-                          ? "border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-600 shadow-xs"
-                          : "border-zinc-200 bg-white hover:bg-zinc-50"
-                      }`}
-                    >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-white mt-0.5">
-                        <User className="h-4 w-4 text-emerald-400" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-xs font-bold text-zinc-950">Pay on First Lesson</p>
-                        <p className="text-[11px] text-zinc-500 mt-0.5">
-                          Cash on spot or Interac e-Transfer directly to instructor
-                        </p>
-                      </div>
-                    </button>
+                    <div className="border-t border-emerald-200/60 pt-2 text-[11px] text-zinc-600 flex items-start gap-2">
+                      <Lock className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>
+                        Clicking continue will save your reservation and take you to our dedicated Stripe checkout page where you can securely complete your payment. Cash on spot is not accepted.
+                      </span>
+                    </div>
                   </div>
-
-                  {/* Explanatory Callout */}
-                  {form.paymentMethod === "card" ? (
-                    <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 text-xs text-zinc-700 flex items-start gap-3">
-                      <Lock className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                      <div>
-                        <strong>Separate Stripe Checkout Page:</strong>
-                        <p className="mt-0.5 text-zinc-600">
-                          Clicking below will save your reservation and take you to our dedicated Stripe checkout page where you can securely complete your payment.
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 text-xs text-zinc-700 flex items-start gap-3">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                      <div>
-                        <strong>Cash on Spot Selected:</strong>
-                        <p className="mt-0.5 text-zinc-600">
-                          Your appointment slot will be confirmed immediately. Please bring exact cash or be prepared to send an e-Transfer upon meetup.
-                        </p>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 {/* Final Submit Action */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-zinc-200 pt-6">
                   <div className="text-xs text-zinc-500">
-                    {form.paymentMethod === "card"
-                      ? "Next step: Secure checkout on Stripe."
-                      : "Clicking confirm will finalize your appointment reservation."}
+                    Next step: Secure card checkout via Stripe.
                   </div>
 
                   <button
@@ -758,19 +696,16 @@ export default function BookingsCompletionPage() {
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-950 px-9 py-4 text-sm font-bold text-white shadow-md hover:bg-zinc-800 hover:shadow-lg transition active:scale-95 disabled:opacity-50 cursor-pointer"
                   >
                     {submitting ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-white" />
-                    ) : form.paymentMethod === "card" ? (
-                      <CreditCard className="h-4 w-4 text-emerald-400" />
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                        <span>Reserving Slot...</span>
+                      </>
                     ) : (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                      <>
+                        <Lock className="h-4 w-4 text-emerald-400" />
+                        <span>Continue to Stripe Checkout ({form.packagePrice || "$110"}) →</span>
+                      </>
                     )}
-                    <span>
-                      {submitting
-                        ? "Saving Reservation..."
-                        : form.paymentMethod === "card"
-                        ? "Proceed to Secure Stripe Checkout →"
-                        : "Confirm & Book Driving Lesson (Pay on Spot)"}
-                    </span>
                   </button>
                 </div>
               </form>

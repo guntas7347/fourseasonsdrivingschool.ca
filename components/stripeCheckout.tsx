@@ -2,19 +2,17 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  Elements,
+  CheckoutElementsProvider,
   PaymentElement,
-  useElements,
-  useStripe,
-} from "@stripe/react-stripe-js";
+  useCheckout,
+} from "@stripe/react-stripe-js/checkout";
 import { loadStripe } from "@stripe/stripe-js";
 import { markBookingPaidAction } from "@/lib/actions/bookings";
-import { createPaymentIntentAction } from "@/lib/actions/transactions";
+import { markPackageOrderPaidAction } from "@/lib/actions/packages";
+import { createCheckoutSessionAction } from "@/lib/actions/transactions";
 import {
-  CreditCard,
   Lock,
   Loader2,
-  CheckCircle2,
   AlertCircle,
   ShieldCheck,
   RefreshCw,
@@ -25,65 +23,76 @@ const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
 
 interface CheckoutFormProps {
   bookingId?: string;
+  type?: "slot" | "package";
   amountFormatted: string;
-  onSuccess?: (paymentIntentId: string) => void;
+  onSuccess?: (sessionId: string) => void;
 }
 
-function CheckoutForm({ bookingId, amountFormatted, onSuccess }: CheckoutFormProps) {
-  const stripe = useStripe();
-  const elements = useElements();
+function CheckoutForm({
+  bookingId,
+  type = "slot",
+  amountFormatted,
+  onSuccess,
+}: CheckoutFormProps) {
+  const checkoutState = useCheckout();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const isReady = checkoutState.type === "success";
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    if (!stripe || !elements) return;
+    if (checkoutState.type !== "success") return;
+    const { checkout } = checkoutState;
 
     try {
       setLoading(true);
       setErrorMessage(null);
 
-      const returnUrl = `${window.location.origin}/payment-success${
-        bookingId ? `?bookingId=${bookingId}` : ""
-      }`;
+      // In Stripe Checkout Elements SDK, checkout.confirm() submits details and handles redirect
+      const res = await checkout.confirm();
 
-      const { error, paymentIntent } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: returnUrl,
-        },
-        redirect: "if_required",
-      });
-
-      if (error) {
-        setErrorMessage(error.message || "Payment processing failed. Please verify your card details.");
+      if (res && res.type === "error") {
+        setErrorMessage(
+          res.error?.message || "Payment processing failed. Please verify your payment details."
+        );
         setLoading(false);
         return;
       }
 
-      if (paymentIntent && (paymentIntent.status === "succeeded" || paymentIntent.status === "processing")) {
-        // Mark booking as paid in Firestore
+      if (res && res.type === "success") {
+        const sessionId = res.session.id;
+
+        // Mark booking or package order as paid immediately if possible
         if (bookingId) {
           try {
-            await markBookingPaidAction({
-              bookingId,
-              paymentIntentId: paymentIntent.id,
-              cardLast4: "stripe",
-            });
+            if (type === "package") {
+              await markPackageOrderPaidAction({
+                orderId: bookingId,
+                paymentIntentId: sessionId,
+                cardLast4: "stripe",
+              });
+            } else {
+              await markBookingPaidAction({
+                bookingId,
+                paymentIntentId: sessionId,
+                cardLast4: "stripe",
+              });
+            }
           } catch (dbErr) {
-            console.warn("Could not mark booking as paid immediately:", dbErr);
+            console.warn("Could not mark as paid immediately:", dbErr);
           }
         }
 
         if (onSuccess) {
-          onSuccess(paymentIntent.id);
+          onSuccess(sessionId);
         } else {
-          window.location.href = returnUrl;
+          window.location.href = `${window.location.origin}/payment-success?session_id=${sessionId}&bookingId=${bookingId || ""}&type=${type}`;
         }
       }
     } catch (err: any) {
-      console.error("Stripe confirmPayment error:", err);
+      console.error("Stripe checkout.confirm error:", err);
       setErrorMessage(err?.message || "An unexpected error occurred during payment.");
     } finally {
       setLoading(false);
@@ -99,7 +108,14 @@ function CheckoutForm({ bookingId, amountFormatted, onSuccess }: CheckoutFormPro
         </div>
       )}
 
-      {/* Stripe Official Payment Element */}
+      {checkoutState.type === "error" && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-700 flex items-start gap-2.5">
+          <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
+          <span>{checkoutState.error.message}</span>
+        </div>
+      )}
+
+      {/* Stripe Official Checkout Payment Element */}
       <div className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-4">
         <PaymentElement
           options={{
@@ -114,13 +130,13 @@ function CheckoutForm({ bookingId, amountFormatted, onSuccess }: CheckoutFormPro
           <ShieldCheck className="h-4 w-4 text-emerald-600" />
           <span>256-Bit SSL Encrypted Payment</span>
         </span>
-        <span className="font-mono text-[11px] text-zinc-400">Powered by Stripe</span>
+        <span className="font-mono text-[11px] text-zinc-400">Powered by Stripe Checkout</span>
       </div>
 
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={!stripe || loading}
+        disabled={!isReady || loading}
         className="w-full flex items-center justify-center gap-2 rounded-xl bg-zinc-950 py-3.5 px-4 text-sm font-bold text-white shadow-md hover:bg-zinc-800 transition active:scale-95 disabled:opacity-50 cursor-pointer"
       >
         {loading ? (
@@ -131,7 +147,9 @@ function CheckoutForm({ bookingId, amountFormatted, onSuccess }: CheckoutFormPro
         ) : (
           <>
             <Lock className="h-4 w-4 text-emerald-400" />
-            <span>Pay {amountFormatted} &amp; Confirm Booking</span>
+            <span>
+              Pay {amountFormatted} &amp; Complete {type === "package" ? "Package Purchase" : "Booking"}
+            </span>
           </>
         )}
       </button>
@@ -141,26 +159,29 @@ function CheckoutForm({ bookingId, amountFormatted, onSuccess }: CheckoutFormPro
 
 interface StripeCheckoutProps {
   bookingId?: string;
-  amount?: number | string; // in dollars or cents or "$110"
+  type?: "slot" | "package";
+  amount?: number | string;
   currency?: string;
   customerName?: string;
   customerEmail?: string;
-  onSuccess?: (paymentIntentId: string) => void;
+  packageName?: string;
+  onSuccess?: (sessionId: string) => void;
 }
 
 export default function StripeCheckout({
   bookingId,
+  type = "slot",
   amount = 110,
   currency = "cad",
   customerName,
   customerEmail,
+  packageName,
   onSuccess,
 }: StripeCheckoutProps) {
   const [clientSecret, setClientSecret] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
 
-  // Compute display amount formatted (e.g. "$110 CAD")
   const numericAmount =
     typeof amount === "number"
       ? amount
@@ -172,19 +193,31 @@ export default function StripeCheckout({
       setLoading(true);
       setInitError(null);
 
-      const res = await createPaymentIntentAction({
+      const description =
+        type === "package"
+          ? `Four Seasons Driving Package: ${packageName || "Driving Package"} #${bookingId || "direct"}`
+          : `Four Seasons Driving Lesson Booking #${bookingId || "direct"}`;
+
+      const res = await createCheckoutSessionAction({
         amount: numericAmount,
         currency,
         bookingId,
+        type,
         customerName,
         customerEmail,
-        description: `Four Seasons Driving Lesson Booking #${bookingId || "direct"}`,
+        description,
+        metadata: {
+          type,
+          bookingId: bookingId || "",
+          customerName: customerName || "",
+          customerEmail: customerEmail || "",
+        },
       });
 
       if (res.success && res.clientSecret) {
         setClientSecret(res.clientSecret);
       } else {
-        setInitError(res.error || "Unable to initialize Stripe payment session.");
+        setInitError(res.error || "Unable to initialize Stripe checkout session.");
       }
     } catch (err: any) {
       console.error("Payment initialization error:", err);
@@ -196,7 +229,7 @@ export default function StripeCheckout({
 
   useEffect(() => {
     initializePayment();
-  }, [bookingId, numericAmount, currency]);
+  }, [bookingId, numericAmount, currency, type]);
 
   if (loading) {
     return (
@@ -217,37 +250,42 @@ export default function StripeCheckout({
         <button
           type="button"
           onClick={initializePayment}
-          className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-4 py-2 text-xs font-bold text-white hover:bg-zinc-800 transition"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 transition"
         >
           <RefreshCw className="h-3.5 w-3.5" />
-          <span>Retry Payment Initialization</span>
+          <span>Try Again</span>
         </button>
       </div>
     );
   }
 
   return (
-    <Elements
+    <CheckoutElementsProvider
+      key={clientSecret}
       stripe={stripePromise}
       options={{
         clientSecret,
-        appearance: {
-          theme: "stripe",
-          variables: {
-            colorPrimary: "#059669",
-            colorBackground: "#ffffff",
-            colorText: "#18181b",
-            borderRadius: "12px",
-            fontFamily: "inherit",
+        elementsOptions: {
+          appearance: {
+            theme: "stripe",
+            variables: {
+              colorPrimary: "#09090b",
+              colorBackground: "#ffffff",
+              colorText: "#18181b",
+              colorDanger: "#dc2626",
+              fontFamily: "inherit",
+              borderRadius: "0.75rem",
+            },
           },
         },
       }}
     >
       <CheckoutForm
         bookingId={bookingId}
+        type={type}
         amountFormatted={amountFormatted}
         onSuccess={onSuccess}
       />
-    </Elements>
+    </CheckoutElementsProvider>
   );
 }

@@ -346,7 +346,7 @@ function TransactionsTableInner() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
             <input
               type="text"
-              placeholder="Search by Payment Intent ID (pi_...) or Refund ID (re_...)..."
+              placeholder="Search by Session ID (cs_...), Payment Intent (pi_...), or Refund (re_...)..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="w-full rounded-xl border border-zinc-200 bg-zinc-50 pl-10 pr-10 py-2.5 text-xs text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:border-zinc-900 focus:outline-none transition font-mono"
@@ -533,11 +533,15 @@ function TransactionsTableInner() {
                         {isPayment ? (
                           t.referenceId ? (
                             <Link
-                              href={`/admin/bookings?search=${encodeURIComponent(t.referenceId)}`}
+                              href={
+                                t.referenceType === "package"
+                                  ? `/admin/purchased-packages`
+                                  : `/admin/bookings?search=${encodeURIComponent(t.referenceId)}`
+                              }
                               className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-200 transition"
-                              title="Go to associated student booking in Admin"
+                              title={`Go to associated ${t.referenceType === "package" ? "Package Order" : "Booking"} in Admin`}
                             >
-                              <span>Booking: #{t.referenceId.slice(0, 8)}</span>
+                              <span>{t.referenceType === "package" ? "Package" : "Booking"}: #{t.referenceId.slice(0, 8)}</span>
                               <ArrowUpRight className="h-3 w-3" />
                             </Link>
                           ) : (

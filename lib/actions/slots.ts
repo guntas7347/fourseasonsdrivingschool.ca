@@ -337,6 +337,7 @@ export async function manualBookSlotAction(params: {
       alreadyPurchased: "no",
       bookedRoadTest: "no",
       additionalNotes: params.notes || `Manual admin booking via call. Payment: ${params.paymentMethod}`,
+      status: "Manual",
       paymentMethod: params.paymentMethod,
       paymentStatus: params.paymentMethod === "Cash on spot" ? "pay_on_arrival" : "paid",
       createdAt: now,
