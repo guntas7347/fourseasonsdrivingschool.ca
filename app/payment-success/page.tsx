@@ -1,11 +1,18 @@
 import React, { Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { getBookingByIdAction, markBookingPaidAction } from "@/lib/actions/bookings";
-import { getPackageOrderByIdAction, markPackageOrderPaidAction } from "@/lib/actions/packages";
+import {
+  getBookingByIdAction,
+  markBookingPaidAction,
+} from "@/lib/actions/bookings";
+import {
+  getPackageOrderByIdAction,
+  markPackageOrderPaidAction,
+} from "@/lib/actions/packages";
 import { stripe } from "@/lib/stripe";
 import PaymentSuccessClient from "./PaymentSuccessClient";
 import { Loader2 } from "lucide-react";
+import { connection } from "next/server";
 
 async function PaymentSuccessDataFetcher({
   searchParams,
@@ -18,32 +25,45 @@ async function PaymentSuccessDataFetcher({
 }) {
   const params = await searchParams;
   let bookingId = params?.bookingId;
-  let type: "slot" | "package" = params?.type === "package" ? "package" : "slot";
+  let type: "slot" | "package" =
+    params?.type === "package" ? "package" : "slot";
   const sessionId = params?.session_id;
   let paymentIntentId: string | undefined = undefined;
+
+  let receiptUrl: string | null = null;
 
   // Retrieve details directly from Stripe Checkout Session
   if (sessionId) {
     try {
       const session = await stripe.checkout.sessions.retrieve(sessionId, {
-        expand: ["payment_intent"],
+        expand: ["payment_intent", "payment_intent.latest_charge"],
       });
 
       if (session.payment_intent) {
+        const pi =
+          typeof session.payment_intent === "object"
+            ? (session.payment_intent as any)
+            : null;
         paymentIntentId =
           typeof session.payment_intent === "string"
             ? session.payment_intent
             : session.payment_intent.id;
 
+        if (pi?.latest_charge && typeof pi.latest_charge === "object") {
+          receiptUrl = pi.latest_charge.receipt_url || null;
+        }
+
         const resolvedBookingId = bookingId || session.metadata?.bookingId;
         const resolvedType = session.metadata?.type || type;
         if (resolvedBookingId && paymentIntentId) {
-          stripe.paymentIntents.update(paymentIntentId, {
-            metadata: {
-              bookingId: resolvedBookingId,
-              type: resolvedType,
-            },
-          }).catch(() => {});
+          stripe.paymentIntents
+            .update(paymentIntentId, {
+              metadata: {
+                bookingId: resolvedBookingId,
+                type: resolvedType,
+              },
+            })
+            .catch(() => {});
         }
       } else {
         paymentIntentId = session.id;
@@ -58,6 +78,20 @@ async function PaymentSuccessDataFetcher({
       }
     } catch (sessionErr) {
       console.warn("Could not retrieve Stripe Checkout session:", sessionErr);
+    }
+  }
+
+  // If receiptUrl is not set yet but we have paymentIntentId, retrieve latest_charge
+  if (!receiptUrl && paymentIntentId && paymentIntentId.startsWith("pi_")) {
+    try {
+      const pi = await stripe.paymentIntents.retrieve(paymentIntentId, {
+        expand: ["latest_charge"],
+      });
+      if (pi.latest_charge && typeof pi.latest_charge === "object") {
+        receiptUrl = (pi.latest_charge as any).receipt_url || null;
+      }
+    } catch {
+      // ignore
     }
   }
 
@@ -93,11 +127,12 @@ async function PaymentSuccessDataFetcher({
       type={type}
       bookingId={bookingId}
       paymentIntentId={paymentIntentId || sessionId}
+      receiptUrl={receiptUrl}
     />
   );
 }
 
-export default function PaymentSuccessPage({
+export default async function PaymentSuccessPage({
   searchParams,
 }: {
   searchParams: Promise<{
@@ -106,6 +141,7 @@ export default function PaymentSuccessPage({
     session_id?: string;
   }>;
 }) {
+  await connection();
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 font-sans text-zinc-900 selection:bg-emerald-100">
       <Navbar />
@@ -114,7 +150,9 @@ export default function PaymentSuccessPage({
           fallback={
             <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-3">
               <Loader2 className="h-8 w-8 animate-spin text-zinc-900" />
-              <p className="text-xs font-semibold text-zinc-600">Loading receipt...</p>
+              <p className="text-xs font-semibold text-zinc-600">
+                Loading receipt...
+              </p>
             </div>
           }
         >
