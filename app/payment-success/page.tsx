@@ -14,6 +14,8 @@ import PaymentSuccessClient from "./PaymentSuccessClient";
 import { Loader2 } from "lucide-react";
 import { connection } from "next/server";
 
+export const instant = false;
+
 async function PaymentSuccessDataFetcher({
   searchParams,
 }: {
