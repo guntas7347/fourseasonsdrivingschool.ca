@@ -10,8 +10,8 @@ export default function Footer() {
           {/* Brand & Accreditation */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-white">
-                <Car className="h-5 w-5 text-emerald-400" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-white shadow-sm transition-transform group-hover:scale-105">
+                <img src="/images/logo-trans.png" alt="Logo" />
               </div>
               <span className="text-lg font-bold tracking-tight text-white">
                 FOUR SEASONS DRIVING SCHOOL

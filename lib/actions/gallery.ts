@@ -2,10 +2,12 @@
 
 import { db } from "@/lib/firebase/firebase";
 import { revalidatePaths } from "@/lib/revalidatePath";
+import { deleteImage } from "@/lib/cloudinary";
 
 export interface GalleryItem {
   id: string; // Always a genuine Firebase doc.id
   url: string; // Cloudinary URL or direct image URL
+  publicId?: string; // Cloudinary asset public ID
   title: string;
   category:
     | "Student Passes"
@@ -149,6 +151,7 @@ export async function getGalleryImagesAction(
       images.push({
         id: doc.id,
         url: data.url,
+        publicId: data.publicId || "",
         title: data.title || "Four Seasons Gallery Image",
         category: data.category || "General",
         description: data.description || "",
@@ -186,6 +189,7 @@ export async function createGalleryImageAction(
 
     await docRef.set({
       url: data.url.trim(),
+      publicId: data.publicId?.trim() || "",
       title: data.title.trim(),
       category: data.category || "Student Passes",
       description: data.description?.trim() || "",
@@ -237,13 +241,28 @@ export async function updateGalleryImageAction(
 }
 
 /**
- * Delete a gallery image from Firestore
+ * Delete a gallery image from Firestore and Cloudinary
  */
 export async function deleteGalleryImageAction(
   id: string,
+  publicId?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     if (!id) throw new Error("Missing gallery image ID");
+
+    let targetPublicId = publicId;
+    if (!targetPublicId) {
+      const doc = await db.collection("gallery").doc(id).get();
+      targetPublicId = doc.data()?.publicId;
+    }
+
+    if (targetPublicId) {
+      try {
+        await deleteImage(targetPublicId);
+      } catch (cloudErr) {
+        console.warn("Could not delete image from Cloudinary:", cloudErr);
+      }
+    }
 
     await db.collection("gallery").doc(id).delete();
     await revalidatePaths(["/", "/gallery", "/admin/gallery"]);

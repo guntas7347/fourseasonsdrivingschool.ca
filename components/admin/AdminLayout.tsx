@@ -60,8 +60,14 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
       }
 
       // Check if email was already verified in this session
-      const cached = typeof window !== "undefined" ? sessionStorage.getItem("admin_verified_email") : null;
-      if (cached && cached.toLowerCase() === (currentUser.email || "").toLowerCase()) {
+      const cached =
+        typeof window !== "undefined"
+          ? sessionStorage.getItem("admin_verified_email")
+          : null;
+      if (
+        cached &&
+        cached.toLowerCase() === (currentUser.email || "").toLowerCase()
+      ) {
         setUser(currentUser);
         setLoading(false);
         return;
@@ -78,7 +84,7 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
           setUser(null);
           setLoginError(
             check.reason ||
-              `Access Denied: Google account "${currentUser.email}" is not authorized. Redirecting to home...`
+              `Access Denied: Google account "${currentUser.email}" is not authorized. Redirecting to home...`,
           );
           setTimeout(() => {
             router.push("/");
@@ -88,7 +94,10 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
         }
 
         if (typeof window !== "undefined" && currentUser.email) {
-          sessionStorage.setItem("admin_verified_email", currentUser.email.toLowerCase());
+          sessionStorage.setItem(
+            "admin_verified_email",
+            currentUser.email.toLowerCase(),
+          );
         }
         setUser(currentUser);
         setLoading(false);
@@ -116,7 +125,7 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
           setUser(null);
           setLoginError(
             check.reason ||
-              `Access Denied: Google account "${cred.user.email}" is not authorized. Redirecting to home...`
+              `Access Denied: Google account "${cred.user.email}" is not authorized. Redirecting to home...`,
           );
           setTimeout(() => {
             router.push("/");
@@ -124,7 +133,10 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
           return;
         }
         if (typeof window !== "undefined") {
-          sessionStorage.setItem("admin_verified_email", cred.user.email.toLowerCase());
+          sessionStorage.setItem(
+            "admin_verified_email",
+            cred.user.email.toLowerCase(),
+          );
         }
       }
     } catch (err: any) {
@@ -152,7 +164,9 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
       <div className="min-h-screen flex items-center justify-center bg-zinc-50">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-zinc-800" />
-          <p className="text-sm font-medium text-zinc-600">Verifying Admin Access...</p>
+          <p className="text-sm font-medium text-zinc-600">
+            Verifying Admin Access...
+          </p>
         </div>
       </div>
     );
@@ -164,8 +178,8 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
       <div className="min-h-screen flex flex-col justify-center items-center bg-zinc-50 px-4 py-12 selection:bg-emerald-100">
         <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-8 shadow-xl shadow-zinc-950/5">
           <div className="text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-900 text-white shadow-md">
-              <Car className="h-7 w-7 text-emerald-400" />
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-100 text-white shadow-md">
+              <img src="/images/logo-trans.png" alt="Logo" />
             </div>
             <h1 className="mt-5 text-2xl font-bold tracking-tight text-zinc-900">
               Four Seasons Driving School
@@ -174,7 +188,8 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
               Instructor &amp; Management Portal
             </p>
             <p className="mt-3 text-sm text-zinc-500">
-              Sign in with your authorized Google account to manage packages, lesson slots, and bookings.
+              Sign in with your authorized Google account to manage packages,
+              lesson slots, and bookings.
             </p>
           </div>
 
@@ -213,7 +228,9 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
                   />
                 </svg>
               )}
-              <span>{loginLoading ? "Signing in..." : "Continue with Google"}</span>
+              <span>
+                {loginLoading ? "Signing in..." : "Continue with Google"}
+              </span>
             </button>
 
             <div className="pt-4 text-center">
@@ -282,11 +299,13 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
       <aside className="hidden md:flex w-64 flex-col border-r border-zinc-200 bg-white">
         {/* Brand */}
         <div className="flex h-20 items-center gap-3 border-b border-zinc-100 px-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 text-white shadow-xs">
-            <Car className="h-5 w-5 text-emerald-400" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-white shadow-xs">
+            <img src="/images/logo-trans.png" alt="Logo" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-zinc-900 leading-tight">FOUR SEASONS</h2>
+            <h2 className="text-sm font-bold text-zinc-900 leading-tight">
+              FOUR SEASONS
+            </h2>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
               Admin Portal
             </p>
@@ -369,7 +388,9 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-900 text-white">
               <Car className="h-4 w-4 text-emerald-400" />
             </div>
-            <span className="text-sm font-bold text-zinc-900">Four Seasons Admin</span>
+            <span className="text-sm font-bold text-zinc-900">
+              Four Seasons Admin
+            </span>
           </div>
 
           <button
@@ -378,7 +399,11 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
             className="rounded-lg p-2 text-zinc-700 hover:bg-zinc-100"
             aria-label="Toggle Navigation"
           >
-            {mobileSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileSidebarOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
         </header>
 
@@ -406,7 +431,9 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
               })}
             </nav>
             <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between">
-              <span className="text-xs text-zinc-500 truncate">{user.email}</span>
+              <span className="text-xs text-zinc-500 truncate">
+                {user.email}
+              </span>
               <button
                 type="button"
                 onClick={handleLogout}

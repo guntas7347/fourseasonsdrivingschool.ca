@@ -9,11 +9,13 @@ import GoogleReviews from "@/components/GoogleReviews";
 import HeroInteractiveCar from "@/components/HeroInteractiveCar";
 import AnimatedStatsCounter from "@/components/AnimatedStatsCounter";
 import WhyChooseUsShowcase from "@/components/WhyChooseUsShowcase";
+import HomepageGallery from "@/components/HomepageGallery";
 import FaqAccordion from "@/components/FaqAccordion";
 import ScrollProgressBar from "@/components/ScrollProgressBar";
-import ScrollRevealInit from "@/components/ScrollRevealInit";
+import HeroTypeAnimation from "@/components/HeroTypeAnimation";
 import { getHomepagePackagesAction } from "@/lib/actions/packages";
 import { getFaqsAction } from "@/lib/actions/faqs";
+import { getGalleryImagesAction } from "@/lib/actions/gallery";
 import {
   CalendarCheck,
   ArrowRight,
@@ -39,6 +41,12 @@ async function HomepagePackagesList() {
   );
 }
 
+async function HomepageGalleryList() {
+  "use cache";
+  const images = await getGalleryImagesAction();
+  return <HomepageGallery images={images} />;
+}
+
 async function HomepageFaqsList() {
   "use cache";
   const faqs = await getFaqsAction();
@@ -50,9 +58,6 @@ export default function Home() {
     <div className="min-h-screen flex flex-col bg-zinc-50 font-sans text-zinc-900 selection:bg-emerald-100 selection:text-emerald-950">
       {/* Top Reading/Scroll Progress Bar */}
       <ScrollProgressBar />
-
-      {/* Passive Scroll Reveal Observer */}
-      <ScrollRevealInit />
 
       {/* Top Navigation */}
       <Navbar />
@@ -94,9 +99,7 @@ export default function Home() {
               {/* Main Headline with High Visual Contrast */}
               <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-zinc-950 sm:text-6xl sm:leading-[1.12]">
                 Confident Driving. <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-950 via-emerald-800 to-teal-700">
-                  First-Time Road Test Success.
-                </span>
+                <HeroTypeAnimation />
               </h1>
 
               {/* Subtitle */}
@@ -232,6 +235,17 @@ export default function Home() {
             <RegistrationForm />
           </Suspense>
         </section>
+
+        {/* GALLERY SECTION (RECENT STUDENT PASSES & TRAINING FLEET) */}
+        <Suspense
+          fallback={
+            <div className="py-24 text-center text-zinc-400 text-xs font-semibold">
+              Loading photo gallery...
+            </div>
+          }
+        >
+          <HomepageGalleryList />
+        </Suspense>
 
         {/* GOOGLE REVIEWS TESTIMONIALS (INTEGRATED WITH lib/googleReviews.ts) */}
         <Suspense

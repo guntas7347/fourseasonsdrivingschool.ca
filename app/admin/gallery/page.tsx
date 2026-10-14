@@ -28,6 +28,7 @@ import {
 
 interface GalleryFormFields {
   url: string;
+  publicId?: string;
   title: string;
   category: GalleryItem["category"];
   studentName: string;
@@ -38,6 +39,7 @@ interface GalleryFormFields {
 
 const DEFAULT_GALLERY_FORM: GalleryFormFields = {
   url: "",
+  publicId: "",
   title: "",
   category: "Student Passes",
   studentName: "",
@@ -64,7 +66,10 @@ export default function AdminGalleryPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [feedback, setFeedback] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   // useForm hook
   const { form, handleChange, setFields, resetFormFields } =
@@ -97,6 +102,7 @@ export default function AdminGalleryPage() {
     setEditingId(item.id);
     setFields({
       url: item.url,
+      publicId: item.publicId || "",
       title: item.title,
       category: item.category,
       studentName: item.studentName || "",
@@ -108,11 +114,12 @@ export default function AdminGalleryPage() {
     setFeedback(null);
   };
 
-  const handleUploadSuccess = (uploadedUrl: string) => {
-    setFields({ url: uploadedUrl });
+  const handleUploadSuccess = (uploadedUrl: string, publicId?: string) => {
+    setFields({ url: uploadedUrl, publicId: publicId || "" });
     setFeedback({
       type: "success",
-      message: "Image uploaded successfully to Cloudinary! Please complete the title and details below.",
+      message:
+        "Image uploaded successfully to Cloudinary! Please complete the title and details below.",
     });
   };
 
@@ -120,11 +127,17 @@ export default function AdminGalleryPage() {
     e.preventDefault();
 
     if (!form.url.trim()) {
-      setFeedback({ type: "error", message: "Please upload an image or provide an image URL." });
+      setFeedback({
+        type: "error",
+        message: "Please upload an image or provide an image URL.",
+      });
       return;
     }
     if (!form.title.trim()) {
-      setFeedback({ type: "error", message: "Please provide a title for the image." });
+      setFeedback({
+        type: "error",
+        message: "Please provide a title for the image.",
+      });
       return;
     }
 
@@ -135,6 +148,7 @@ export default function AdminGalleryPage() {
       if (editingId) {
         const res = await updateGalleryImageAction(editingId, {
           url: form.url.trim(),
+          publicId: form.publicId?.trim() || "",
           title: form.title.trim(),
           category: form.category,
           studentName: form.studentName.trim(),
@@ -148,11 +162,15 @@ export default function AdminGalleryPage() {
           setShowModal(false);
           resetFormFields();
         } else {
-          setFeedback({ type: "error", message: res.error || "Failed to update image." });
+          setFeedback({
+            type: "error",
+            message: res.error || "Failed to update image.",
+          });
         }
       } else {
         const res = await createGalleryImageAction({
           url: form.url.trim(),
+          publicId: form.publicId?.trim() || "",
           title: form.title.trim(),
           category: form.category,
           studentName: form.studentName.trim(),
@@ -166,23 +184,32 @@ export default function AdminGalleryPage() {
           setShowModal(false);
           resetFormFields();
         } else {
-          setFeedback({ type: "error", message: res.error || "Failed to add image." });
+          setFeedback({
+            type: "error",
+            message: res.error || "Failed to add image.",
+          });
         }
       }
     } catch (err: any) {
       console.error("Gallery save error:", err);
-      setFeedback({ type: "error", message: err?.message || "An unexpected error occurred." });
+      setFeedback({
+        type: "error",
+        message: err?.message || "An unexpected error occurred.",
+      });
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`Are you sure you want to delete "${title}" from the gallery?`)) return;
+  const handleDelete = async (id: string, title: string, publicId?: string) => {
+    if (
+      !confirm(`Are you sure you want to delete "${title}" from the gallery?`)
+    )
+      return;
 
     try {
       setDeletingId(id);
-      const res = await deleteGalleryImageAction(id);
+      const res = await deleteGalleryImageAction(id, publicId);
       if (res.success) {
         setImages((prev) => prev.filter((img) => img.id !== id));
       } else {
@@ -210,7 +237,8 @@ export default function AdminGalleryPage() {
             Photo Gallery CMS
           </h1>
           <p className="mt-1 text-sm text-zinc-500">
-            Upload and manage photos of student road test passes, training vehicles, and driving lessons.
+            Upload and manage photos of student road test passes, training
+            vehicles, and driving lessons.
           </p>
         </div>
 
@@ -241,7 +269,10 @@ export default function AdminGalleryPage() {
                 : "bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50"
             }`}
           >
-            {cat} {cat === "All" ? `(${images.length})` : `(${images.filter((i) => i.category === cat).length})`}
+            {cat}{" "}
+            {cat === "All"
+              ? `(${images.length})`
+              : `(${images.filter((i) => i.category === cat).length})`}
           </button>
         ))}
       </div>
@@ -250,14 +281,18 @@ export default function AdminGalleryPage() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-24 text-zinc-400">
           <Loader2 className="h-8 w-8 animate-spin" />
-          <p className="mt-3 text-xs font-semibold">Loading gallery photos from Firestore...</p>
+          <p className="mt-3 text-xs font-semibold">
+            Loading gallery photos from Firestore...
+          </p>
         </div>
       ) : filteredImages.length === 0 ? (
         <div className="rounded-2xl border-2 border-dashed border-zinc-200 p-12 text-center bg-white">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100 text-zinc-400">
             <ImageIcon className="h-6 w-6" />
           </div>
-          <h3 className="mt-4 text-base font-bold text-zinc-900">No photos found</h3>
+          <h3 className="mt-4 text-base font-bold text-zinc-900">
+            No photos found
+          </h3>
           <p className="mt-1 text-xs text-zinc-500">
             {filterCategory === "All"
               ? "Get started by adding your first student road test photo."
@@ -302,7 +337,9 @@ export default function AdminGalleryPage() {
 
                 {/* Details */}
                 <div className="p-4 space-y-2">
-                  <h3 className="font-bold text-sm text-zinc-950 line-clamp-1">{img.title}</h3>
+                  <h3 className="font-bold text-sm text-zinc-950 line-clamp-1">
+                    {img.title}
+                  </h3>
                   {img.studentName && (
                     <p className="text-xs text-zinc-600 flex items-center gap-1.5">
                       <User className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
@@ -346,7 +383,7 @@ export default function AdminGalleryPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDelete(img.id, img.title)}
+                    onClick={() => handleDelete(img.id, img.title, img.publicId)}
                     disabled={deletingId === img.id}
                     className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition"
                     title="Delete Image"
@@ -376,10 +413,13 @@ export default function AdminGalleryPage() {
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-zinc-950">
-                    {editingId ? "Edit Gallery Photo Details" : "Upload & Add New Photo"}
+                    {editingId
+                      ? "Edit Gallery Photo Details"
+                      : "Upload & Add New Photo"}
                   </h2>
                   <p className="text-xs text-zinc-500">
-                    Upload via Cloudinary or paste direct URL, then save to Firestore.
+                    Upload via Cloudinary or paste direct URL, then save to
+                    Firestore.
                   </p>
                 </div>
               </div>
@@ -421,10 +461,16 @@ export default function AdminGalleryPage() {
               </div>
 
               {/* Form Fields */}
-              <form onSubmit={handleSubmit} className="space-y-4 pt-2 border-t border-zinc-100">
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-4 pt-2 border-t border-zinc-100"
+              >
                 {/* Direct Image URL (can be edited/pasted or auto-filled by Cloudinary) */}
                 <div>
-                  <label htmlFor="url" className="block text-xs font-semibold text-zinc-700">
+                  <label
+                    htmlFor="url"
+                    className="block text-xs font-semibold text-zinc-700"
+                  >
                     Image URL <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -438,14 +484,19 @@ export default function AdminGalleryPage() {
                     className="mt-1 block w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-xs text-zinc-900 focus:border-zinc-900 focus:outline-none"
                   />
                   <p className="mt-1 text-[11px] text-zinc-400">
-                    Automatically populated upon Cloudinary upload, or paste an external URL.
+                    Automatically populated upon Cloudinary upload, or paste an
+                    external URL.
                   </p>
                 </div>
 
                 {/* Title */}
                 <div>
-                  <label htmlFor="title" className="block text-xs font-semibold text-zinc-700">
-                    Photo Title / Headline <span className="text-red-500">*</span>
+                  <label
+                    htmlFor="title"
+                    className="block text-xs font-semibold text-zinc-700"
+                  >
+                    Photo Title / Headline{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -462,7 +513,10 @@ export default function AdminGalleryPage() {
                 {/* Category & Location */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="category" className="block text-xs font-semibold text-zinc-700">
+                    <label
+                      htmlFor="category"
+                      className="block text-xs font-semibold text-zinc-700"
+                    >
                       Category
                     </label>
                     <select
@@ -481,7 +535,10 @@ export default function AdminGalleryPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="studentName" className="block text-xs font-semibold text-zinc-700">
+                    <label
+                      htmlFor="studentName"
+                      className="block text-xs font-semibold text-zinc-700"
+                    >
                       Student Name (Optional)
                     </label>
                     <input
@@ -498,7 +555,10 @@ export default function AdminGalleryPage() {
 
                 {/* Location */}
                 <div>
-                  <label htmlFor="location" className="block text-xs font-semibold text-zinc-700">
+                  <label
+                    htmlFor="location"
+                    className="block text-xs font-semibold text-zinc-700"
+                  >
                     Location / ICBC Test Centre
                   </label>
                   <input
@@ -514,7 +574,10 @@ export default function AdminGalleryPage() {
 
                 {/* Description */}
                 <div>
-                  <label htmlFor="description" className="block text-xs font-semibold text-zinc-700">
+                  <label
+                    htmlFor="description"
+                    className="block text-xs font-semibold text-zinc-700"
+                  >
                     Caption / Description (Optional)
                   </label>
                   <textarea
@@ -538,7 +601,10 @@ export default function AdminGalleryPage() {
                     onChange={handleChange}
                     className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
                   />
-                  <label htmlFor="featured" className="text-xs font-medium text-zinc-700">
+                  <label
+                    htmlFor="featured"
+                    className="text-xs font-medium text-zinc-700"
+                  >
                     Mark as Featured (Highlight at top of public gallery)
                   </label>
                 </div>
@@ -563,7 +629,13 @@ export default function AdminGalleryPage() {
                     ) : (
                       <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
                     )}
-                    <span>{submitting ? "Saving to Firestore..." : editingId ? "Save Changes" : "Save to Gallery"}</span>
+                    <span>
+                      {submitting
+                        ? "Saving to Firestore..."
+                        : editingId
+                          ? "Save Changes"
+                          : "Save to Gallery"}
+                    </span>
                   </button>
                 </div>
               </form>

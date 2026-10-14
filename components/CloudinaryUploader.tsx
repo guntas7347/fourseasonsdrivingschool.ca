@@ -8,10 +8,10 @@ import {
   Image as ImageIcon,
   X,
 } from "lucide-react";
-import { CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } from "@/lib/config";
+import { createImage } from "@/lib/cloudinary";
 
 interface CloudinaryUploaderProps {
-  onUpload: (url: string) => void;
+  onUpload: (url: string, publicId?: string) => void;
 }
 
 export default function CloudinaryUploader({
@@ -58,31 +58,24 @@ export default function CloudinaryUploader({
     if (!image) return;
 
     setLoading(true);
-    const formData = new FormData();
-    formData.append("file", image);
-    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET!);
-
     try {
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
+      const formData = new FormData();
+      formData.append("file", image);
 
-      if (!res.ok) throw new Error("Upload failed");
+      const result = await createImage(formData);
 
-      const data = await res.json();
-      onUpload(data.secure_url);
+      if (!result?.url) throw new Error("Upload failed: No image URL returned");
+
+      onUpload(result.url, result.publicId);
       setSuccess(true);
       setImage(null);
 
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-    } catch (err) {
-      console.error("Error uploading image:", err);
+    } catch (err: any) {
+      console.error("Error uploading image via Cloudinary action:", err);
+      alert(err?.message || "Failed to upload image. Please try again or paste a URL.");
     } finally {
       setLoading(false);
     }
@@ -90,7 +83,7 @@ export default function CloudinaryUploader({
 
   const handleManualSubmit = () => {
     if (manualUrl.trim()) {
-      onUpload(manualUrl.trim());
+      onUpload(manualUrl.trim(), "");
       setManualUrl("");
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2000);

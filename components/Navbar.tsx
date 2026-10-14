@@ -21,8 +21,8 @@ export default function Navbar() {
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand / Logo */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-900 text-white shadow-sm transition-transform group-hover:scale-105">
-            <Car className="h-6 w-6 text-emerald-400" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-100 text-white shadow-sm transition-transform group-hover:scale-105">
+            <img src="/images/logo-trans.png" alt="Logo" />
           </div>
           <div className="flex flex-col">
             <span className="text-base font-bold tracking-tight text-zinc-900 sm:text-lg">
@@ -37,19 +37,19 @@ export default function Navbar() {
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-8 md:flex">
           <Link
-            href="#about"
+            href="/#about"
             className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-950"
           >
             About
           </Link>
           <Link
-            href="#packages"
+            href="/#packages"
             className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-950"
           >
             Packages & Pricing
           </Link>
           <Link
-            href="#why-us"
+            href="/#why-us"
             className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-950"
           >
             Why Choose Us
@@ -61,7 +61,7 @@ export default function Navbar() {
             Gallery
           </Link>
           <Link
-            href="#faqs"
+            href="/#faqs"
             className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-950"
           >
             FAQs
@@ -82,7 +82,7 @@ export default function Navbar() {
 
           <a
             href="/#register"
-            onClick={scrollToRegistration}
+            // onClick={scrollToRegistration}
             className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-zinc-800 hover:shadow-md active:scale-95"
           >
             <Calendar className="h-4 w-4 text-emerald-400" />
@@ -94,7 +94,7 @@ export default function Navbar() {
         <div className="flex items-center gap-2 md:hidden">
           <a
             href="/#register"
-            onClick={scrollToRegistration}
+            // onClick={scrollToRegistration}
             className="rounded-lg bg-zinc-900 px-3 py-2 text-xs font-semibold text-white"
           >
             Book Now

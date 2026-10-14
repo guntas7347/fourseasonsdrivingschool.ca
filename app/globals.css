@@ -140,53 +140,71 @@ body {
   animation: pulseGlowEmerald 2.5s infinite;
 }
 
-/* Scroll reveal performance styling */
+/* Scroll reveal performance styling with fail-safe auto-reveal fallback */
+@keyframes autoRevealFallback {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .scroll-reveal {
   opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(20px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: autoRevealFallback 0.4s ease-out 1.2s forwards;
   will-change: opacity, transform;
 }
 
 .scroll-reveal.revealed {
-  opacity: 1;
-  transform: translateY(0);
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  animation: none !important;
 }
 
 .scroll-reveal-left {
   opacity: 0;
-  transform: translateX(-28px);
-  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateX(-24px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: autoRevealFallback 0.4s ease-out 1.2s forwards;
   will-change: opacity, transform;
 }
 
 .scroll-reveal-left.revealed {
-  opacity: 1;
-  transform: translateX(0);
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+  animation: none !important;
 }
 
 .scroll-reveal-right {
   opacity: 0;
-  transform: translateX(28px);
-  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateX(24px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: autoRevealFallback 0.4s ease-out 1.2s forwards;
   will-change: opacity, transform;
 }
 
 .scroll-reveal-right.revealed {
-  opacity: 1;
-  transform: translateX(0);
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+  animation: none !important;
 }
 
 .scroll-scale-up {
   opacity: 0;
-  transform: scale(0.92);
-  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: scale(0.95);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: autoRevealFallback 0.4s ease-out 1.2s forwards;
   will-change: opacity, transform;
 }
 
 .scroll-scale-up.revealed {
-  opacity: 1;
-  transform: scale(1);
+  opacity: 1 !important;
+  transform: scale(1) !important;
+  animation: none !important;
 }
 
 /* Modern CSS Scroll-Driven Animations (Progressive Enhancement) */
