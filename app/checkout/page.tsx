@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import StripeCheckout from "@/components/stripeCheckout";
 import { db } from "@/lib/firebase/firebase";
 
+import { connection } from "next/server";
 import {
   Calendar,
   Clock,
@@ -21,12 +22,14 @@ import {
   Sparkles,
   Award,
 } from "lucide-react";
+import { redirect } from "next/navigation";
 
 async function CheckoutDetails({
   searchParams,
 }: {
   searchParams: Promise<{ bookingId?: string; type?: string }>;
 }) {
+  await connection();
   const { bookingId, type = "slot" } = await searchParams;
   const isPackage = type === "package";
 
@@ -78,6 +81,12 @@ async function CheckoutDetails({
     );
   }
 
+  if (record.paymentStatus === "paid") {
+    redirect(
+      `/payment-success?bookingId=${bookingId}&type=${type}&session_id=${record?.paymentIntentId || ""}`,
+    );
+  }
+
   // Parse numeric price for Stripe
   const rawPrice = isPackage
     ? record.packagePrice || record.numericPrice || "$110"
@@ -101,13 +110,17 @@ async function CheckoutDetails({
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-900 transition mb-3"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          <span>&larr; {isPackage ? "Back to Packages" : "Back to Booking"}</span>
+          <span>
+            &larr; {isPackage ? "Back to Packages" : "Back to Booking"}
+          </span>
         </Link>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-950">
-              {isPackage ? "Package Purchase Checkout" : "Lesson Checkout & Payment"}
+              {isPackage
+                ? "Package Purchase Checkout"
+                : "Lesson Checkout & Payment"}
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-zinc-500">
               {isPackage
@@ -145,9 +158,12 @@ async function CheckoutDetails({
               <div className="flex items-start gap-3">
                 <PackageIcon className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
                 <div>
-                  <p className="font-semibold text-zinc-900">Package Curriculum</p>
+                  <p className="font-semibold text-zinc-900">
+                    Package Curriculum
+                  </p>
                   <p className="text-zinc-600 mt-0.5">
-                    {record.lessonsCount || 1} Lessons &bull; {record.duration || "Full course training"}
+                    {record.lessonsCount || 1} Lessons &bull;{" "}
+                    {record.duration || "Full course training"}
                   </p>
                 </div>
               </div>
@@ -159,7 +175,9 @@ async function CheckoutDetails({
                   <p className="text-zinc-600 mt-0.5">
                     {customerFullName} ({record.phone})
                   </p>
-                  <p className="text-zinc-500 text-[11px] mt-0.5">{record.email}</p>
+                  <p className="text-zinc-500 text-[11px] mt-0.5">
+                    {record.email}
+                  </p>
                 </div>
               </div>
 
@@ -167,8 +185,12 @@ async function CheckoutDetails({
                 <div className="flex items-start gap-3">
                   <Calendar className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-semibold text-zinc-900">Preferred Start Date</p>
-                    <p className="text-zinc-600 mt-0.5">{record.preferredStartDate}</p>
+                    <p className="font-semibold text-zinc-900">
+                      Preferred Start Date
+                    </p>
+                    <p className="text-zinc-600 mt-0.5">
+                      {record.preferredStartDate}
+                    </p>
                   </div>
                 </div>
               )}
@@ -178,7 +200,8 @@ async function CheckoutDetails({
                 <div>
                   <p className="font-semibold text-zinc-900">License Class</p>
                   <p className="text-zinc-600 mt-0.5">
-                    {record.licenseClass || "Class 7L"} {record.licenseNumber ? `(#${record.licenseNumber})` : ""}
+                    {record.licenseClass || "Class 7L"}{" "}
+                    {record.licenseNumber ? `(#${record.licenseNumber})` : ""}
                   </p>
                 </div>
               </div>
@@ -189,7 +212,8 @@ async function CheckoutDetails({
                   <div>
                     <p className="font-semibold text-zinc-900">Service Area</p>
                     <p className="text-zinc-600 mt-0.5">
-                      {record.street ? `${record.street}, ` : ""}{record.city} {record.postCode || ""}
+                      {record.street ? `${record.street}, ` : ""}
+                      {record.city} {record.postCode || ""}
                     </p>
                   </div>
                 </div>
@@ -209,7 +233,9 @@ async function CheckoutDetails({
               <div className="flex items-start gap-3">
                 <Clock className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
                 <div>
-                  <p className="font-semibold text-zinc-900">Appointment Time</p>
+                  <p className="font-semibold text-zinc-900">
+                    Appointment Time
+                  </p>
                   <p className="text-zinc-600 mt-0.5">{record.slotTime}</p>
                 </div>
               </div>
@@ -218,7 +244,9 @@ async function CheckoutDetails({
                 <Car className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
                 <div>
                   <p className="font-semibold text-zinc-900">Vehicle</p>
-                  <p className="text-zinc-600 mt-0.5">Dual-Control Certified Vehicle</p>
+                  <p className="text-zinc-600 mt-0.5">
+                    Dual-Control Certified Vehicle
+                  </p>
                 </div>
               </div>
 
@@ -236,7 +264,9 @@ async function CheckoutDetails({
                 <div className="flex items-start gap-3">
                   <MapPin className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-semibold text-zinc-900">Pickup Location</p>
+                    <p className="font-semibold text-zinc-900">
+                      Pickup Location
+                    </p>
                     <p className="text-zinc-600 mt-0.5">
                       {record.street}, {record.city} {record.postCode}
                     </p>
@@ -310,7 +340,7 @@ async function CheckoutDetails({
             type={isPackage ? "package" : "slot"}
             amount={numericPrice}
             currency="cad"
-            packageName={record.packageName}
+            packageName={record.packageName || record.slotTypeName}
             customerName={customerFullName}
             customerEmail={record.email}
           />
@@ -333,7 +363,9 @@ export default function CheckoutPage({
           fallback={
             <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-3">
               <Loader2 className="h-8 w-8 animate-spin text-zinc-900" />
-              <p className="text-xs font-semibold text-zinc-600">Loading checkout...</p>
+              <p className="text-xs font-semibold text-zinc-600">
+                Loading checkout...
+              </p>
             </div>
           }
         >

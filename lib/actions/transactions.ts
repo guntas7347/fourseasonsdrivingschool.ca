@@ -51,9 +51,7 @@ function mapPaymentIntent(payment: Stripe.PaymentIntent): Transaction {
     null;
 
   const customerName =
-    charge?.billing_details?.name ||
-    payment.metadata?.customerName ||
-    null;
+    charge?.billing_details?.name || payment.metadata?.customerName || null;
 
   let bookingId =
     payment.metadata?.bookingId ||
@@ -65,7 +63,9 @@ function mapPaymentIntent(payment: Stripe.PaymentIntent): Transaction {
   const rawType =
     payment.metadata?.type ||
     charge?.metadata?.type ||
-    (payment.description?.toLowerCase().includes("package") ? "package" : "slot");
+    (payment.description?.toLowerCase().includes("package")
+      ? "package"
+      : "slot");
 
   // Fallback: extract booking/order ID from description (e.g., #bXCKVHgBZQFW43TFTpK2)
   if (!bookingId) {
@@ -110,7 +110,7 @@ function mapPaymentIntent(payment: Stripe.PaymentIntent): Transaction {
 
 function mapStripeRefund(
   refund: Stripe.Refund,
-  parentPayment?: Stripe.PaymentIntent | null
+  parentPayment?: Stripe.PaymentIntent | null,
 ): Transaction {
   const parentCharge =
     typeof refund.charge === "object" && refund.charge !== null
@@ -154,7 +154,9 @@ function mapStripeRefund(
     cardBrand: cardDetails?.brand || null,
     cardLast4: cardDetails?.last4 || null,
     receiptUrl: parentCharge?.receipt_url || null,
-    refundReason: refund.reason ? refund.reason.replace(/_/g, " ") : "Customer requested",
+    refundReason: refund.reason
+      ? refund.reason.replace(/_/g, " ")
+      : "Customer requested",
     refunded: true,
     amountRefunded: refund.amount,
   };
@@ -176,7 +178,11 @@ export async function getTransactions(
     if (cleanSearch.startsWith("cs_")) {
       try {
         const session = await stripe.checkout.sessions.retrieve(cleanSearch, {
-          expand: ["payment_intent", "payment_intent.latest_charge", "payment_intent.latest_charge.refunds"],
+          expand: [
+            "payment_intent",
+            "payment_intent.latest_charge",
+            "payment_intent.latest_charge.refunds",
+          ],
         });
 
         if (session) {
@@ -210,11 +216,23 @@ export async function getTransactions(
                   referenceType: "booking",
                   amount: session.amount_total || 0,
                   currency: session.currency || "cad",
-                  status: session.payment_status === "paid" ? "succeeded" : session.status || "pending",
+                  status:
+                    session.payment_status === "paid"
+                      ? "succeeded"
+                      : session.status || "pending",
                   created: session.created,
-                  customer: typeof session.customer === "string" ? session.customer : (session.customer?.id ?? null),
-                  customerEmail: session.customer_details?.email || session.metadata?.customerEmail || null,
-                  customerName: session.customer_details?.name || session.metadata?.customerName || null,
+                  customer:
+                    typeof session.customer === "string"
+                      ? session.customer
+                      : (session.customer?.id ?? null),
+                  customerEmail:
+                    session.customer_details?.email ||
+                    session.metadata?.customerEmail ||
+                    null,
+                  customerName:
+                    session.customer_details?.name ||
+                    session.metadata?.customerName ||
+                    null,
                   description: `Stripe Checkout Session #${session.id.slice(0, 10)}`,
                   paymentMethod: "card",
                   cardBrand: null,
@@ -232,7 +250,10 @@ export async function getTransactions(
           }
         }
       } catch (err: any) {
-        console.warn("Could not retrieve Checkout Session with ID:", cleanSearch);
+        console.warn(
+          "Could not retrieve Checkout Session with ID:",
+          cleanSearch,
+        );
       }
     }
 
@@ -243,7 +264,8 @@ export async function getTransactions(
           expand: ["payment_intent", "charge"],
         });
         const parentPi =
-          typeof refund.payment_intent === "object" && refund.payment_intent !== null
+          typeof refund.payment_intent === "object" &&
+          refund.payment_intent !== null
             ? (refund.payment_intent as Stripe.PaymentIntent)
             : null;
 
@@ -272,7 +294,8 @@ export async function getTransactions(
           const rows: Transaction[] = [mapPaymentIntent(payment)];
 
           const charge =
-            typeof payment.latest_charge === "object" && payment.latest_charge !== null
+            typeof payment.latest_charge === "object" &&
+            payment.latest_charge !== null
               ? (payment.latest_charge as Stripe.Charge)
               : null;
 
@@ -331,7 +354,9 @@ export async function getTransactions(
 
     // Standard ledger listing: fetch payment intents with expanded charge & refunds
     const fetchLimit =
-      statusFilter === "succeeded" ? Math.min(100, Math.max(safeLimit * 2, 40)) : safeLimit;
+      statusFilter === "succeeded"
+        ? Math.min(100, Math.max(safeLimit * 2, 40))
+        : safeLimit;
 
     const listParams: Stripe.PaymentIntentListParams = {
       limit: fetchLimit,
@@ -345,11 +370,17 @@ export async function getTransactions(
     }
 
     const paymentsPromise = stripe.paymentIntents.list(listParams);
-    const refundsPromise = !cursor && !beforeCursor
-      ? stripe.refunds.list({ limit: 20, expand: ["data.charge"] }).catch(() => ({ data: [] }))
-      : Promise.resolve({ data: [] });
+    const refundsPromise =
+      !cursor && !beforeCursor
+        ? stripe.refunds
+            .list({ limit: 20, expand: ["data.charge"] })
+            .catch(() => ({ data: [] }))
+        : Promise.resolve({ data: [] });
 
-    const [payments, standaloneRefunds] = await Promise.all([paymentsPromise, refundsPromise]);
+    const [payments, standaloneRefunds] = await Promise.all([
+      paymentsPromise,
+      refundsPromise,
+    ]);
 
     const ledgerRows: Transaction[] = [];
     const seenRefundIds = new Set<string>();
@@ -359,7 +390,8 @@ export async function getTransactions(
       ledgerRows.push(paymentRow);
 
       const charge =
-        typeof payment.latest_charge === "object" && payment.latest_charge !== null
+        typeof payment.latest_charge === "object" &&
+        payment.latest_charge !== null
           ? (payment.latest_charge as Stripe.Charge)
           : null;
 
@@ -387,7 +419,9 @@ export async function getTransactions(
       filtered = ledgerRows.filter((item) => item.status === "succeeded");
     } else if (statusFilter === "requires_payment_method") {
       filtered = ledgerRows.filter(
-        (item) => item.status === "requires_payment_method" || item.status === "requires_action"
+        (item) =>
+          item.status === "requires_payment_method" ||
+          item.status === "requires_action",
       );
     } else if (statusFilter === "canceled") {
       filtered = ledgerRows.filter((item) => item.status === "canceled");
@@ -402,7 +436,9 @@ export async function getTransactions(
       data: paged,
       hasMore: payments.has_more || filtered.length > safeLimit,
       nextCursor:
-        payments.data.length > 0 ? payments.data[payments.data.length - 1].id : null,
+        payments.data.length > 0
+          ? payments.data[payments.data.length - 1].id
+          : null,
       prevCursor: payments.data.length > 0 ? payments.data[0].id : null,
     };
   } catch (err: any) {
@@ -449,7 +485,8 @@ export async function createCheckoutSessionAction({
   try {
     let amountInCents = 11000;
     if (typeof amount === "number") {
-      amountInCents = amount > 1000 ? Math.round(amount) : Math.round(amount * 100);
+      amountInCents =
+        amount > 1000 ? Math.round(amount) : Math.round(amount * 100);
     } else if (typeof amount === "string") {
       const cleaned = parseFloat(amount.replace(/[^0-9.]/g, ""));
       if (!isNaN(cleaned) && cleaned > 0) {
@@ -477,12 +514,19 @@ export async function createCheckoutSessionAction({
 
     const origin =
       process.env.NEXT_PUBLIC_APP_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+      (process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : "http://localhost:3000");
+
+    const customer = await stripe.customers.create({
+      name: customerName || "",
+      email: customerEmail || "",
+    });
 
     const session = await stripe.checkout.sessions.create({
       ui_mode: "elements",
       mode: "payment",
-      customer_email: customerEmail || undefined,
+      customer: customer.id,
       line_items: [
         {
           price_data: {
@@ -519,4 +563,3 @@ export async function createCheckoutSessionAction({
     };
   }
 }
-

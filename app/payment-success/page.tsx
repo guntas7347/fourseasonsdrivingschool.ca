@@ -10,11 +10,9 @@ import {
   markPackageOrderPaidAction,
 } from "@/lib/actions/packages";
 import { stripe } from "@/lib/stripe";
+import { connection } from "next/server";
 import PaymentSuccessClient from "./PaymentSuccessClient";
 import { Loader2 } from "lucide-react";
-import { connection } from "next/server";
-
-export const instant = false;
 
 async function PaymentSuccessDataFetcher({
   searchParams,
@@ -23,23 +21,28 @@ async function PaymentSuccessDataFetcher({
     bookingId?: string;
     type?: string;
     session_id?: string;
+    payment_intent?: string;
+    payment_intent_id?: string;
   }>;
 }) {
+  await connection();
   const params = await searchParams;
   let bookingId = params?.bookingId;
   let type: "slot" | "package" =
     params?.type === "package" ? "package" : "slot";
-  const sessionId = params?.session_id;
+  const sessionId =
+    params?.session_id || params?.payment_intent || params?.payment_intent_id;
   let paymentIntentId: string | undefined = undefined;
 
   let receiptUrl: string | null = null;
 
-  // Retrieve details directly from Stripe Checkout Session
+  // Retrieve details directly from Stripe Checkout Session or Payment Intent
   if (sessionId) {
     try {
-      const session = await stripe.checkout.sessions.retrieve(sessionId, {
-        expand: ["payment_intent", "payment_intent.latest_charge"],
-      });
+      if (sessionId.startsWith("cs_")) {
+        const session = await stripe.checkout.sessions.retrieve(sessionId, {
+          expand: ["payment_intent", "payment_intent.latest_charge"],
+        });
 
       if (session.payment_intent) {
         const pi =
@@ -78,10 +81,13 @@ async function PaymentSuccessDataFetcher({
       if (session.metadata?.type) {
         type = session.metadata.type === "package" ? "package" : "slot";
       }
-    } catch (sessionErr) {
-      console.warn("Could not retrieve Stripe Checkout session:", sessionErr);
+    } else if (sessionId.startsWith("pi_")) {
+      paymentIntentId = sessionId;
     }
+  } catch (sessionErr) {
+    console.warn("Could not retrieve Stripe payment details:", sessionErr);
   }
+}
 
   // If receiptUrl is not set yet but we have paymentIntentId, retrieve latest_charge
   if (!receiptUrl && paymentIntentId && paymentIntentId.startsWith("pi_")) {
@@ -91,6 +97,12 @@ async function PaymentSuccessDataFetcher({
       });
       if (pi.latest_charge && typeof pi.latest_charge === "object") {
         receiptUrl = (pi.latest_charge as any).receipt_url || null;
+      }
+      if (!bookingId && pi.metadata?.bookingId) {
+        bookingId = pi.metadata.bookingId;
+      }
+      if (pi.metadata?.type) {
+        type = pi.metadata.type === "package" ? "package" : "slot";
       }
     } catch {
       // ignore
@@ -141,9 +153,10 @@ export default async function PaymentSuccessPage({
     bookingId?: string;
     type?: string;
     session_id?: string;
+    payment_intent?: string;
+    payment_intent_id?: string;
   }>;
 }) {
-  await connection();
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 font-sans text-zinc-900 selection:bg-emerald-100">
       <Navbar />

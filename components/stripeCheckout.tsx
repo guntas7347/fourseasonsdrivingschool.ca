@@ -55,7 +55,8 @@ function CheckoutForm({
 
       if (res && res.type === "error") {
         setErrorMessage(
-          res.error?.message || "Payment processing failed. Please verify your payment details."
+          res.error?.message ||
+            "Payment processing failed. Please verify your payment details.",
         );
         setLoading(false);
         return;
@@ -93,7 +94,9 @@ function CheckoutForm({
       }
     } catch (err: any) {
       console.error("Stripe checkout.confirm error:", err);
-      setErrorMessage(err?.message || "An unexpected error occurred during payment.");
+      setErrorMessage(
+        err?.message || "An unexpected error occurred during payment.",
+      );
     } finally {
       setLoading(false);
     }
@@ -130,7 +133,9 @@ function CheckoutForm({
           <ShieldCheck className="h-4 w-4 text-emerald-600" />
           <span>256-Bit SSL Encrypted Payment</span>
         </span>
-        <span className="font-mono text-[11px] text-zinc-400">Powered by Stripe Checkout</span>
+        <span className="font-mono text-[11px] text-zinc-400">
+          Powered by Stripe Checkout
+        </span>
       </div>
 
       {/* Submit Button */}
@@ -148,7 +153,8 @@ function CheckoutForm({
           <>
             <Lock className="h-4 w-4 text-emerald-400" />
             <span>
-              Pay {amountFormatted} &amp; Complete {type === "package" ? "Package Purchase" : "Booking"}
+              Pay {amountFormatted} &amp; Complete{" "}
+              {type === "package" ? "Package Purchase" : "Booking"}
             </span>
           </>
         )}
@@ -195,8 +201,8 @@ export default function StripeCheckout({
 
       const description =
         type === "package"
-          ? `Four Seasons Driving Package: ${packageName || "Driving Package"} #${bookingId || "direct"}`
-          : `Four Seasons Driving Lesson Booking #${bookingId || "direct"}`;
+          ? `Package - ${packageName || "Driving Package"} #${bookingId || ""}`
+          : `Lesson - ${packageName || "Driving Lesson"} #${bookingId || ""}`;
 
       const res = await createCheckoutSessionAction({
         amount: numericAmount,
@@ -217,7 +223,9 @@ export default function StripeCheckout({
       if (res.success && res.clientSecret) {
         setClientSecret(res.clientSecret);
       } else {
-        setInitError(res.error || "Unable to initialize Stripe checkout session.");
+        setInitError(
+          res.error || "Unable to initialize Stripe checkout session.",
+        );
       }
     } catch (err: any) {
       console.error("Payment initialization error:", err);
@@ -235,7 +243,9 @@ export default function StripeCheckout({
     return (
       <div className="flex flex-col items-center justify-center py-12 text-zinc-500 space-y-3">
         <Loader2 className="h-8 w-8 animate-spin text-zinc-900" />
-        <p className="text-xs font-semibold">Preparing secure Stripe checkout...</p>
+        <p className="text-xs font-semibold">
+          Preparing secure Stripe checkout...
+        </p>
       </div>
     );
   }
