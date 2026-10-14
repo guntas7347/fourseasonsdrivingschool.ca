@@ -9,6 +9,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { markBookingPaidAction } from "@/lib/actions/bookings";
+import { createPaymentIntentAction } from "@/lib/actions/transactions";
 import {
   CreditCard,
   Lock,
@@ -171,25 +172,19 @@ export default function StripeCheckout({
       setLoading(true);
       setInitError(null);
 
-      const res = await fetch("/api/create-payment-intent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: numericAmount,
-          currency,
-          bookingId,
-          customerName,
-          customerEmail,
-          description: `Four Seasons Driving Lesson Booking #${bookingId || "direct"}`,
-        }),
+      const res = await createPaymentIntentAction({
+        amount: numericAmount,
+        currency,
+        bookingId,
+        customerName,
+        customerEmail,
+        description: `Four Seasons Driving Lesson Booking #${bookingId || "direct"}`,
       });
 
-      const data = await res.json();
-
-      if (res.ok && data.clientSecret) {
-        setClientSecret(data.clientSecret);
+      if (res.success && res.clientSecret) {
+        setClientSecret(res.clientSecret);
       } else {
-        setInitError(data.error || "Unable to initialize Stripe payment session.");
+        setInitError(res.error || "Unable to initialize Stripe payment session.");
       }
     } catch (err: any) {
       console.error("Payment initialization error:", err);

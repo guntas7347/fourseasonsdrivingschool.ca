@@ -333,3 +333,83 @@ export async function getTransactions(
     };
   }
 }
+
+/**
+ * Server action to create a Stripe PaymentIntent directly without an API route
+ */
+export async function createPaymentIntentAction({
+  amount,
+  currency = "cad",
+  bookingId,
+  customerName,
+  customerEmail,
+  description,
+  metadata = {},
+}: {
+  amount: number | string;
+  currency?: string;
+  bookingId?: string;
+  customerName?: string;
+  customerEmail?: string;
+  description?: string;
+  metadata?: Record<string, string>;
+}): Promise<{
+  success: boolean;
+  clientSecret?: string | null;
+  id?: string;
+  amount?: number;
+  currency?: string;
+  error?: string;
+}> {
+  try {
+    // Parse amount to integer cents (e.g., $110 -> 11000 cents)
+    let amountInCents = 11000;
+    if (typeof amount === "number") {
+      amountInCents = amount > 1000 ? Math.round(amount) : Math.round(amount * 100);
+    } else if (typeof amount === "string") {
+      const cleaned = parseFloat(amount.replace(/[^0-9.]/g, ""));
+      if (!isNaN(cleaned) && cleaned > 0) {
+        amountInCents = Math.round(cleaned * 100);
+      }
+    }
+
+    // Safety minimum: $1 CAD = 100 cents
+    if (amountInCents < 100) {
+      amountInCents = 11000;
+    }
+
+    const metadataPayload: Record<string, string> = {
+      ...metadata,
+    };
+    if (bookingId) metadataPayload.bookingId = String(bookingId);
+    if (customerEmail) metadataPayload.customerEmail = String(customerEmail);
+    if (customerName) metadataPayload.customerName = String(customerName);
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amountInCents,
+      currency: (currency || "cad").toLowerCase(),
+      description:
+        description ||
+        `Four Seasons Driving Lesson Booking #${bookingId || "direct"}`,
+      automatic_payment_methods: {
+        enabled: true,
+      },
+      metadata: metadataPayload,
+    });
+
+    return {
+      success: true,
+      clientSecret: paymentIntent.client_secret,
+      id: paymentIntent.id,
+      amount: paymentIntent.amount,
+      currency: paymentIntent.currency,
+    };
+  } catch (err: any) {
+    console.error("createPaymentIntentAction error:", err);
+    return {
+      success: false,
+      error: err?.message || "Failed to initialize Stripe payment",
+    };
+  }
+}
+
