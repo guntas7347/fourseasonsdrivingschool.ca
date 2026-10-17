@@ -3,11 +3,11 @@ import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: "fourseasonsdrivingschool-7541c.firebaseapp.com",
-  projectId: "fourseasonsdrivingschool-7541c",
-  storageBucket: "fourseasonsdrivingschool-7541c.firebasestorage.app",
-  messagingSenderId: "796006457722",
-  appId: "1:796006457722:web:3942ddaf562446a0bcf6c3",
+  authDomain: "fourseasonsdrivingschool-ebb7b.firebaseapp.com",
+  projectId: "fourseasonsdrivingschool-ebb7b",
+  storageBucket: "fourseasonsdrivingschool-ebb7b.firebasestorage.app",
+  messagingSenderId: "53482597366",
+  appId: "1:53482597366:web:40d006e43a641ca79ff5d7",
 };
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);

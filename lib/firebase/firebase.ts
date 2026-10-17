@@ -13,9 +13,9 @@ const admin =
   getApps()[0] ??
   initializeApp({
     credential: cert({
-      projectId: "fourseasonsdrivingschool-7541c",
+      projectId: "fourseasonsdrivingschool-ebb7b",
       clientEmail:
-        "firebase-adminsdk-fbsvc@fourseasonsdrivingschool-7541c.iam.gserviceaccount.com",
+        "firebase-adminsdk-fbsvc@fourseasonsdrivingschool-ebb7b.iam.gserviceaccount.com",
       privateKey,
     }),
   });
