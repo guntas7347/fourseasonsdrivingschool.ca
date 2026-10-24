@@ -85,6 +85,22 @@ export default function Home() {
 
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-4xl text-center">
+              {/* Prominent Official Brand Logo */}
+              <div className="relative mb-6 sm:mb-8 flex justify-center">
+                {/* Ambient glow */}
+                <div className="absolute -inset-4 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none" />
+                <div className="relative group inline-flex items-center justify-center rounded-3xl bg-white/90 px-6 py-4 sm:px-10 sm:py-6 shadow-xl shadow-zinc-900/5 border border-white/90 backdrop-blur-md transition-all duration-300 hover:shadow-2xl hover:scale-105">
+                  <Image
+                    src="/images/logo-trans.png"
+                    alt="Four Seasons Driving School"
+                    width={380}
+                    height={210}
+                    priority
+                    className="w-52 sm:w-72 md:w-80 h-auto object-contain transition-transform duration-300 group-hover:scale-102"
+                  />
+                </div>
+              </div>
+
               {/* Top ICBC Badge with Pulsing Radar Beacon */}
               <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200/90 bg-white/90 px-4 py-1.5 text-xs font-semibold text-zinc-800 shadow-xs backdrop-blur-md transition-transform hover:scale-105 duration-200">
                 <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping" />

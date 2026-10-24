@@ -2,6 +2,12 @@
 
 import { db } from "@/lib/firebase/firebase";
 import { revalidatePaths } from "@/lib/revalidatePath";
+import {
+  doSlotsOverlap,
+  parseTimeToMinutes,
+  extractSlotTimes,
+  hasInstructorConflict,
+} from "@/lib/slotUtils";
 
 export interface SlotItem {
   id: string; // Always a genuine Firebase doc.id
@@ -105,7 +111,48 @@ export async function getAvailableSlotDatesAction(): Promise<string[]> {
 }
 
 /**
- * Create a new single instructor time slot with a real Firebase doc.id
+ * Fetch all existing slots in database for the specified dates.
+ * Useful for client-side and server-side conflict detection.
+ */
+export async function getExistingSlotsForDatesAction(
+  dates: string[]
+): Promise<Array<{ id: string; date: string; startTime: string; endTime: string; time: string; instructor?: string; status: string }>> {
+  try {
+    if (!dates || dates.length === 0) return [];
+    const uniqueDates = Array.from(new Set(dates));
+    const results: Array<{ id: string; date: string; startTime: string; endTime: string; time: string; instructor?: string; status: string }> = [];
+
+    for (const d of uniqueDates) {
+      const snap = await db.collection("slots").where("date", "==", d).get();
+      snap.forEach((doc) => {
+        const data = doc.data();
+        const times = extractSlotTimes({
+          startTime: data.startTime,
+          endTime: data.endTime,
+          time: data.time,
+        });
+        results.push({
+          id: doc.id,
+          date: data.date,
+          startTime: times.startTime,
+          endTime: times.endTime,
+          time: data.time || `${times.startTime} – ${times.endTime}`,
+          instructor: data.instructor || "",
+          status: data.status || "available",
+        });
+      });
+    }
+
+    return results;
+  } catch (err) {
+    console.error("getExistingSlotsForDatesAction error:", err);
+    return [];
+  }
+}
+
+/**
+ * Create a new single instructor time slot with a real Firebase doc.id.
+ * Validates against conflicting/overlapping slots on the same date.
  */
 export async function createSlotAction(slotData: {
   date: string;
@@ -116,6 +163,38 @@ export async function createSlotAction(slotData: {
   status?: "available" | "booked" | "reserved";
 }): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
+    if (!slotData.date || !slotData.startTime || !slotData.endTime) {
+      return {
+        success: false,
+        error: "Date, start time, and end time are required.",
+      };
+    }
+
+    // Check for conflicting existing slots on this date
+    const existingSnap = await db
+      .collection("slots")
+      .where("date", "==", slotData.date)
+      .get();
+    for (const doc of existingSnap.docs) {
+      const data = doc.data();
+      const existingInstructor = data.instructor || "";
+      const newInstructor = slotData.instructor || "";
+
+      if (
+        hasInstructorConflict(existingInstructor, newInstructor) &&
+        doSlotsOverlap(slotData, {
+          startTime: data.startTime,
+          endTime: data.endTime,
+          time: data.time,
+        })
+      ) {
+        return {
+          success: false,
+          error: `Contradicting slot: An existing slot is already scheduled on ${slotData.date} from ${data.startTime || data.time} to ${data.endTime}. Cannot create overlapping slot (${slotData.startTime} – ${slotData.endTime}).`,
+        };
+      }
+    }
+
     const docRef = db.collection("slots").doc(); // Always generate doc.id
     const time = `${slotData.startTime} – ${slotData.endTime}`;
     const now = new Date().toISOString();
@@ -140,7 +219,8 @@ export async function createSlotAction(slotData: {
 }
 
 /**
- * Create multiple slots in batch with real Firebase doc.id (no instructor requirement)
+ * Create multiple slots in batch with real Firebase doc.id.
+ * Validates against contradicting slots (both internal batch overlaps and existing Firestore slots).
  */
 export async function createBatchSlotsAction(
   slots: Array<{
@@ -150,13 +230,72 @@ export async function createBatchSlotsAction(
     duration?: string;
     instructor?: string;
     status?: "available" | "booked" | "reserved";
-  }>
+  }>,
 ): Promise<{ success: boolean; count: number; error?: string }> {
   try {
     if (!slots || slots.length === 0) {
       return { success: false, count: 0, error: "No slots provided." };
     }
 
+    // 1. Validate internal batch conflicts
+    for (let i = 0; i < slots.length; i++) {
+      for (let j = i + 1; j < slots.length; j++) {
+        const a = slots[i];
+        const b = slots[j];
+        if (a.date === b.date) {
+          const aInst = (a.instructor || "").toLowerCase().trim();
+          const bInst = (b.instructor || "").toLowerCase().trim();
+          if (hasInstructorConflict(a.instructor, b.instructor) && doSlotsOverlap(a, b)) {
+            return {
+              success: false,
+              count: 0,
+              error: `Contradicting slots within batch on ${a.date}: (${a.startTime} – ${a.endTime}) overlaps with (${b.startTime} – ${b.endTime}). Please remove overlapping slots before saving.`,
+            };
+          }
+        }
+      }
+    }
+
+    // 2. Query existing slots for all unique dates in the batch to detect database conflicts
+    const uniqueDates = Array.from(new Set(slots.map((s) => s.date)));
+    const existingSlotsByDate: Record<
+      string,
+      Array<{ startTime: string; endTime: string; time?: string; instructor?: string }>
+    > = {};
+
+    for (const d of uniqueDates) {
+      const snap = await db.collection("slots").where("date", "==", d).get();
+      existingSlotsByDate[d] = snap.docs.map((doc) => {
+        const dData = doc.data();
+        const times = extractSlotTimes({
+          startTime: dData.startTime,
+          endTime: dData.endTime,
+          time: dData.time,
+        });
+        return {
+          startTime: times.startTime,
+          endTime: times.endTime,
+          time: dData.time,
+          instructor: dData.instructor || "",
+        };
+      });
+    }
+
+    // 3. Reject any slot that overlaps with an already existing slot in Firestore
+    for (const newSlot of slots) {
+      const existingList = existingSlotsByDate[newSlot.date] || [];
+      for (const ex of existingList) {
+        if (hasInstructorConflict(newSlot.instructor, ex.instructor) && doSlotsOverlap(newSlot, ex)) {
+          return {
+            success: false,
+            count: 0,
+            error: `Contradicting slot detected on ${newSlot.date}: Proposed slot ${newSlot.startTime} – ${newSlot.endTime} overlaps with existing slot (${ex.startTime || ex.time} – ${ex.endTime}) in the database.`,
+          };
+        }
+      }
+    }
+
+    // 4. Batch write to Firestore
     const now = new Date().toISOString();
     const batchSize = 400;
     let savedCount = 0;
@@ -188,7 +327,11 @@ export async function createBatchSlotsAction(
     return { success: true, count: savedCount };
   } catch (error: any) {
     console.error("createBatchSlotsAction error:", error);
-    return { success: false, count: 0, error: error?.message || "Batch creation failed" };
+    return {
+      success: false,
+      count: 0,
+      error: error?.message || "Batch creation failed",
+    };
   }
 }
 
@@ -198,7 +341,7 @@ export async function createBatchSlotsAction(
 export async function updateSlotStatusAction(
   id: string,
   status: "available" | "booked" | "reserved",
-  bookedBy?: SlotItem["bookedBy"]
+  bookedBy?: SlotItem["bookedBy"],
 ): Promise<{ success: boolean; error?: string }> {
   try {
     if (!id) throw new Error("Missing slot doc.id");
@@ -214,7 +357,10 @@ export async function updateSlotStatusAction(
     return { success: true };
   } catch (error: any) {
     console.error("updateSlotStatusAction error:", error);
-    return { success: false, error: error?.message || "Failed to update slot status" };
+    return {
+      success: false,
+      error: error?.message || "Failed to update slot status",
+    };
   }
 }
 
@@ -225,7 +371,7 @@ export async function updateSlotStatusAction(
  * - Unlocks the slot so it can now be deleted or booked again
  */
 export async function freeSlotAction(
-  slotId: string
+  slotId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     if (!slotId) throw new Error("Missing slot doc.id");
@@ -256,7 +402,7 @@ export async function freeSlotAction(
             paymentStatus: "refunded",
             refundedAt: new Date().toISOString(),
           },
-          { merge: true }
+          { merge: true },
         );
       } catch (bErr) {
         console.warn("Could not update linked booking status:", bErr);
@@ -270,10 +416,15 @@ export async function freeSlotAction(
         bookedBy: null,
         updatedAt: new Date().toISOString(),
       },
-      { merge: true }
+      { merge: true },
     );
 
-    await revalidatePaths(["/", "/bookings", "/admin/slots", "/admin/bookings"]);
+    await revalidatePaths([
+      "/",
+      "/bookings",
+      "/admin/slots",
+      "/admin/bookings",
+    ]);
     return { success: true };
   } catch (error: any) {
     console.error("freeSlotAction error:", error);
@@ -336,28 +487,34 @@ export async function manualBookSlotAction(params: {
       slotTypePrice: params.slotTypePrice || "$110",
       alreadyPurchased: "no",
       bookedRoadTest: "no",
-      additionalNotes: params.notes || `Manual admin booking via call. Payment: ${params.paymentMethod}`,
+      additionalNotes:
+        params.notes ||
+        `Manual admin booking via call. Payment: ${params.paymentMethod}`,
       status: "Manual",
       paymentMethod: params.paymentMethod,
-      paymentStatus: params.paymentMethod === "Cash on spot" ? "pay_on_arrival" : "paid",
+      paymentStatus:
+        params.paymentMethod === "Cash on spot" ? "pay_on_arrival" : "paid",
       createdAt: now,
     });
 
     // Mark slot as booked
-    await db.collection("slots").doc(params.slotId).set(
-      {
-        status: "booked",
-        bookedBy: {
-          name: params.studentName.trim(),
-          email: params.email?.trim() || "",
-          phone: params.phone.trim(),
-          bookingId: bookingDoc.id,
-          paymentMethod: params.paymentMethod,
+    await db
+      .collection("slots")
+      .doc(params.slotId)
+      .set(
+        {
+          status: "booked",
+          bookedBy: {
+            name: params.studentName.trim(),
+            email: params.email?.trim() || "",
+            phone: params.phone.trim(),
+            bookingId: bookingDoc.id,
+            paymentMethod: params.paymentMethod,
+          },
+          updatedAt: now,
         },
-        updatedAt: now,
-      },
-      { merge: true }
-    );
+        { merge: true },
+      );
 
     // Call mock Stripe payment intent if paid by Card
     if (params.paymentMethod === "Card") {
@@ -375,7 +532,8 @@ export async function manualBookSlotAction(params: {
 
     // Log confirmation email
     try {
-      const { generateSlotBookingEmail, logConfirmationEmail } = await import("@/lib/email");
+      const { generateSlotBookingEmail, logConfirmationEmail } =
+        await import("@/lib/email");
       const emailTemplate = generateSlotBookingEmail({
         bookingId: bookingDoc.id,
         customerName: params.studentName.trim(),
@@ -399,11 +557,19 @@ export async function manualBookSlotAction(params: {
       console.warn("Email logging error:", eErr);
     }
 
-    await revalidatePaths(["/", "/bookings", "/admin/slots", "/admin/bookings"]);
+    await revalidatePaths([
+      "/",
+      "/bookings",
+      "/admin/slots",
+      "/admin/bookings",
+    ]);
     return { success: true, bookingId: bookingDoc.id };
   } catch (error: any) {
     console.error("manualBookSlotAction error:", error);
-    return { success: false, error: error?.message || "Failed to manually book slot" };
+    return {
+      success: false,
+      error: error?.message || "Failed to manually book slot",
+    };
   }
 }
 
@@ -411,7 +577,9 @@ export async function manualBookSlotAction(params: {
  * Delete a slot by its Firebase doc.id.
  * Safety check: If slot is marked as booked, deletion is blocked!
  */
-export async function deleteSlotAction(id: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteSlotAction(
+  id: string,
+): Promise<{ success: boolean; error?: string }> {
   try {
     if (!id) throw new Error("Missing slot doc.id");
 
@@ -421,7 +589,8 @@ export async function deleteSlotAction(id: string): Promise<{ success: boolean; 
       if (data?.status === "booked") {
         return {
           success: false,
-          error: "Cannot delete a booked slot directly. Please open the slot management modal and free it first.",
+          error:
+            "Cannot delete a booked slot directly. Please open the slot management modal and free it first.",
         };
       }
     }
@@ -432,6 +601,78 @@ export async function deleteSlotAction(id: string): Promise<{ success: boolean; 
   } catch (error: any) {
     console.error("deleteSlotAction error:", error);
     return { success: false, error: error?.message || "Failed to delete slot" };
+  }
+}
+
+/**
+ * Bulk delete slots by an array of Firebase doc IDs.
+ * Safety check: Automatically skips and protects slots with status "booked".
+ */
+export async function deleteBatchSlotsAction(slotIds: string[]): Promise<{
+  success: boolean;
+  deletedCount: number;
+  skippedBookedCount: number;
+  error?: string;
+}> {
+  try {
+    if (!slotIds || slotIds.length === 0) {
+      return {
+        success: false,
+        deletedCount: 0,
+        skippedBookedCount: 0,
+        error: "No slot IDs provided for deletion.",
+      };
+    }
+
+    const uniqueIds = Array.from(new Set(slotIds));
+    let deletedCount = 0;
+    let skippedBookedCount = 0;
+    const toDeleteRefs: FirebaseFirestore.DocumentReference[] = [];
+
+    // Query in chunks of 50 to inspect status safely
+    const chunkSize = 50;
+    for (let i = 0; i < uniqueIds.length; i += chunkSize) {
+      const chunk = uniqueIds.slice(i, i + chunkSize);
+      const docs = await Promise.all(
+        chunk.map((id) => db.collection("slots").doc(id).get())
+      );
+
+      for (const doc of docs) {
+        if (doc.exists) {
+          const data = doc.data();
+          if (data?.status === "booked") {
+            skippedBookedCount++;
+          } else {
+            toDeleteRefs.push(doc.ref);
+          }
+        }
+      }
+    }
+
+    // Perform Firestore batched deletes in chunks of 400
+    if (toDeleteRefs.length > 0) {
+      const batchSize = 400;
+      for (let i = 0; i < toDeleteRefs.length; i += batchSize) {
+        const batch = db.batch();
+        const batchRefs = toDeleteRefs.slice(i, i + batchSize);
+        for (const ref of batchRefs) {
+          batch.delete(ref);
+        }
+        await batch.commit();
+        deletedCount += batchRefs.length;
+      }
+    }
+
+    await revalidatePaths(["/", "/bookings", "/admin/slots", "/admin/bookings"]);
+    return { success: true, deletedCount, skippedBookedCount };
+  } catch (error: any) {
+    console.error("deleteBatchSlotsAction error:", error);
+    return {
+      success: false,
+      deletedCount: 0,
+      skippedBookedCount: 0,
+      error: error?.message || "Failed to batch delete slots",
+    };
   }
 }
 
@@ -466,7 +707,10 @@ const DEFAULT_SLOT_TYPES: Omit<SlotTypeItem, "id">[] = [
 
 async function ensureDefaultSlotTypesSeeded(): Promise<SlotTypeItem[]> {
   try {
-    const snapshot = await db.collection("slot_types").orderBy("numericPrice", "asc").get();
+    const snapshot = await db
+      .collection("slot_types")
+      .orderBy("numericPrice", "asc")
+      .get();
     if (!snapshot.empty) {
       const items: SlotTypeItem[] = [];
       snapshot.forEach((doc) => {
@@ -539,7 +783,9 @@ export async function createSlotTypeAction(data: {
   try {
     const docRef = db.collection("slot_types").doc();
     const numeric = Number(data.numericPrice) || 0;
-    const formattedPrice = data.price?.startsWith("$") ? data.price : `$${numeric}`;
+    const formattedPrice = data.price?.startsWith("$")
+      ? data.price
+      : `$${numeric}`;
     const now = new Date().toISOString();
 
     await docRef.set({
@@ -553,7 +799,10 @@ export async function createSlotTypeAction(data: {
     return { success: true, id: docRef.id };
   } catch (error: any) {
     console.error("createSlotTypeAction error:", error);
-    return { success: false, error: error?.message || "Failed to create slot type" };
+    return {
+      success: false,
+      error: error?.message || "Failed to create slot type",
+    };
   }
 }
 
@@ -562,12 +811,14 @@ export async function createSlotTypeAction(data: {
  */
 export async function updateSlotTypeAction(
   id: string,
-  data: { name: string; price?: string; numericPrice: number }
+  data: { name: string; price?: string; numericPrice: number },
 ): Promise<{ success: boolean; error?: string }> {
   try {
     if (!id) throw new Error("Missing slot type doc.id");
     const numeric = Number(data.numericPrice) || 0;
-    const formattedPrice = data.price?.startsWith("$") ? data.price : `$${numeric}`;
+    const formattedPrice = data.price?.startsWith("$")
+      ? data.price
+      : `$${numeric}`;
 
     await db.collection("slot_types").doc(id).set(
       {
@@ -576,21 +827,26 @@ export async function updateSlotTypeAction(
         numericPrice: numeric,
         updatedAt: new Date().toISOString(),
       },
-      { merge: true }
+      { merge: true },
     );
 
     await revalidatePaths(["/", "/bookings", "/admin/slots"]);
     return { success: true };
   } catch (error: any) {
     console.error("updateSlotTypeAction error:", error);
-    return { success: false, error: error?.message || "Failed to update slot type" };
+    return {
+      success: false,
+      error: error?.message || "Failed to update slot type",
+    };
   }
 }
 
 /**
  * Delete a slot type by doc.id
  */
-export async function deleteSlotTypeAction(id: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteSlotTypeAction(
+  id: string,
+): Promise<{ success: boolean; error?: string }> {
   try {
     if (!id) throw new Error("Missing slot type doc.id");
     await db.collection("slot_types").doc(id).delete();
@@ -598,6 +854,9 @@ export async function deleteSlotTypeAction(id: string): Promise<{ success: boole
     return { success: true };
   } catch (error: any) {
     console.error("deleteSlotTypeAction error:", error);
-    return { success: false, error: error?.message || "Failed to delete slot type" };
+    return {
+      success: false,
+      error: error?.message || "Failed to delete slot type",
+    };
   }
 }

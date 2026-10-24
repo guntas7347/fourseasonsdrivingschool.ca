@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import {
   getSlotsAction,
   deleteSlotAction,
+  deleteBatchSlotsAction,
   updateSlotStatusAction,
   getSlotTypesAction,
   createSlotTypeAction,
@@ -15,6 +16,7 @@ import {
   SlotItem,
   SlotTypeItem,
 } from "@/lib/actions/slots";
+import { doSlotsOverlap, hasInstructorConflict } from "@/lib/slotUtils";
 import { useForm } from "@/lib/useForm";
 import {
   Plus,
@@ -39,6 +41,10 @@ import {
   CreditCard,
   Banknote,
   AlertCircle,
+  AlertTriangle,
+  Check,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 
 interface SlotTypeFormFields {
@@ -77,6 +83,15 @@ export default function AdminSlotsPage() {
   const [loadingSlots, setLoadingSlots] = useState(true);
   const [filterDate, setFilterDate] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Bulk Slot Selection State
+  const [selectedSlotIds, setSelectedSlotIds] = useState<string[]>([]);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [bulkDeleteResult, setBulkDeleteResult] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
 
   // Manage Slot Modal State
   const [managingSlot, setManagingSlot] = useState<SlotItem | null>(null);
@@ -163,6 +178,7 @@ export default function AdminSlotsPage() {
       const res = await deleteSlotAction(slot.id);
       if (res.success) {
         setSlots((prev) => prev.filter((s) => s.id !== slot.id));
+        setSelectedSlotIds((prev) => prev.filter((id) => id !== slot.id));
         if (managingSlot?.id === slot.id) {
           setManagingSlot(null);
         }
@@ -174,6 +190,128 @@ export default function AdminSlotsPage() {
       alert("Failed to delete slot.");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  // Detect overlapping / contradicting slots in currently loaded schedule
+  const overlappingSlotIds = useMemo(() => {
+    const conflictIds = new Set<string>();
+    const byDate: Record<string, SlotItem[]> = {};
+
+    slots.forEach((s) => {
+      if (!byDate[s.date]) byDate[s.date] = [];
+      byDate[s.date].push(s);
+    });
+
+    Object.values(byDate).forEach((daySlots) => {
+      for (let i = 0; i < daySlots.length; i++) {
+        for (let j = i + 1; j < daySlots.length; j++) {
+          const a = daySlots[i];
+          const b = daySlots[j];
+          if (hasInstructorConflict(a.instructor, b.instructor) && doSlotsOverlap(a, b)) {
+            conflictIds.add(a.id);
+            conflictIds.add(b.id);
+          }
+        }
+      }
+    });
+
+    return conflictIds;
+  }, [slots]);
+
+  // Available slots that can be selected for deletion (booked are protected)
+  const availableSlots = useMemo(() => {
+    return slots.filter((s) => s.status === "available");
+  }, [slots]);
+
+  // Bulk selection handlers
+  const handleToggleSelect = (slotId: string, isBooked: boolean) => {
+    if (isBooked) return;
+    setSelectedSlotIds((prev) =>
+      prev.includes(slotId) ? prev.filter((id) => id !== slotId) : [...prev, slotId]
+    );
+  };
+
+  const handleSelectAllAvailable = () => {
+    if (selectedSlotIds.length === availableSlots.length) {
+      setSelectedSlotIds([]);
+    } else {
+      setSelectedSlotIds(availableSlots.map((s) => s.id));
+    }
+  };
+
+  const handleSelectAllOverlapping = () => {
+    // Select all available overlapping slots
+    const availOverlapping = slots
+      .filter((s) => overlappingSlotIds.has(s.id) && s.status === "available")
+      .map((s) => s.id);
+    setSelectedSlotIds(availOverlapping);
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedSlotIds([]);
+  };
+
+  const handleConfirmBulkDelete = async () => {
+    if (selectedSlotIds.length === 0) return;
+    try {
+      setBulkDeleting(true);
+      setBulkDeleteResult(null);
+
+      let res: {
+        success: boolean;
+        deletedCount: number;
+        skippedBookedCount: number;
+        error?: string;
+      };
+
+      try {
+        res = await deleteBatchSlotsAction(selectedSlotIds);
+      } catch (actionErr: any) {
+        console.warn(
+          "deleteBatchSlotsAction failed, falling back to deleteSlotAction:",
+          actionErr
+        );
+        // Fallback: delete slots one by one safely skipping booked slots
+        let deletedCount = 0;
+        let skippedBookedCount = 0;
+        for (const id of selectedSlotIds) {
+          const target = slots.find((s) => s.id === id);
+          if (target?.status === "booked") {
+            skippedBookedCount++;
+            continue;
+          }
+          const singleRes = await deleteSlotAction(id);
+          if (singleRes.success) {
+            deletedCount++;
+          }
+        }
+        res = { success: true, deletedCount, skippedBookedCount };
+      }
+
+      if (res.success) {
+        setSlots((prev) => prev.filter((s) => !selectedSlotIds.includes(s.id)));
+        const msg =
+          res.skippedBookedCount > 0
+            ? `Successfully deleted ${res.deletedCount} slot(s). ${res.skippedBookedCount} booked slot(s) were protected from deletion.`
+            : `Successfully deleted ${res.deletedCount} slot(s).`;
+        setBulkDeleteResult({ message: msg, type: "success" });
+        setSelectedSlotIds([]);
+        setShowBulkDeleteModal(false);
+      } else {
+        setBulkDeleteResult({
+          message: res.error || "Failed to delete selected slots.",
+          type: "error",
+        });
+      }
+    } catch (err: any) {
+      console.error("Bulk delete error:", err);
+      setBulkDeleteResult({
+        message: err?.message || "An unexpected error occurred during bulk deletion.",
+        type: "error",
+      });
+    } finally {
+      setBulkDeleting(false);
     }
   };
 
@@ -439,31 +577,126 @@ export default function AdminSlotsPage() {
       {/* TAB 1: SCHEDULED TIME SLOTS */}
       {activeTab === "slots" && (
         <div className="space-y-6">
-          {/* Filter bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-200 bg-white p-3.5 shadow-xs">
-            <div className="flex items-center gap-3">
-              <Filter className="h-4 w-4 text-zinc-400" />
-              <span className="text-xs font-semibold text-zinc-700">Filter by Date:</span>
-              <input
-                type="date"
-                value={filterDate}
-                onChange={(e) => setFilterDate(e.target.value)}
-                className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs text-zinc-800 focus:border-zinc-900 focus:outline-none"
-              />
-              {filterDate && (
+          {/* Bulk Action Result Notification */}
+          {bulkDeleteResult && (
+            <div
+              className={`flex items-start justify-between gap-3 rounded-2xl border p-4 text-xs font-semibold shadow-xs ${
+                bulkDeleteResult.type === "success"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+                  : "border-red-200 bg-red-50 text-red-900"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {bulkDeleteResult.type === "success" ? (
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
+                )}
+                <span>{bulkDeleteResult.message}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBulkDeleteResult(null)}
+                className="text-zinc-400 hover:text-zinc-700"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
+          {/* Overlapping Slots Alert Banner */}
+          {overlappingSlotIds.size > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-300 bg-amber-50/90 p-4 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-200 text-amber-800 shrink-0">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-amber-950">
+                    {overlappingSlotIds.size} Contradicting / Overlapping Slots Detected
+                  </h4>
+                  <p className="text-[11px] text-amber-800">
+                    These slots have conflicting time intervals on the same day. You can bulk-select them for immediate cleanup.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setFilterDate("")}
-                  className="text-xs text-zinc-500 hover:text-zinc-900 underline"
+                  onClick={handleSelectAllOverlapping}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-amber-900 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-amber-800 transition"
                 >
-                  Clear Filter
+                  <CheckSquare className="h-3.5 w-3.5" />
+                  <span>Select Conflicting Slots</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Filter & Selection Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-200 bg-white p-3.5 shadow-xs">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Select All Checkbox */}
+              {availableSlots.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleSelectAllAvailable}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-50 px-2.5 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 transition"
+                  title="Toggle select all available slots"
+                >
+                  <div
+                    className={`h-3.5 w-3.5 rounded border flex items-center justify-center transition ${
+                      selectedSlotIds.length === availableSlots.length && availableSlots.length > 0
+                        ? "bg-emerald-600 border-emerald-600 text-white"
+                        : "border-zinc-400 bg-white"
+                    }`}
+                  >
+                    {selectedSlotIds.length === availableSlots.length && availableSlots.length > 0 && (
+                      <Check className="h-2.5 w-2.5 stroke-[3]" />
+                    )}
+                  </div>
+                  <span>
+                    {selectedSlotIds.length === availableSlots.length && availableSlots.length > 0
+                      ? "Deselect All"
+                      : `Select All Available (${availableSlots.length})`}
+                  </span>
                 </button>
               )}
+
+              <div className="h-4 w-px bg-zinc-200 hidden sm:block" />
+
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-zinc-400" />
+                <span className="text-xs font-semibold text-zinc-700">Date:</span>
+                <input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  className="rounded-lg border border-zinc-200 px-3 py-1 text-xs text-zinc-800 focus:border-zinc-900 focus:outline-none"
+                />
+                {filterDate && (
+                  <button
+                    type="button"
+                    onClick={() => setFilterDate("")}
+                    className="text-xs text-zinc-500 hover:text-zinc-900 underline"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
             </div>
 
-            <span className="text-xs font-medium text-zinc-500">
-              Showing {slots.length} time slot{slots.length === 1 ? "" : "s"}
-            </span>
+            <div className="flex items-center gap-3 text-xs">
+              {selectedSlotIds.length > 0 && (
+                <span className="font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1">
+                  {selectedSlotIds.length} selected
+                </span>
+              )}
+              <span className="font-medium text-zinc-500">
+                Total: {slots.length} slot{slots.length === 1 ? "" : "s"}
+              </span>
+            </div>
           </div>
 
           {/* Slots Grid */}
@@ -493,23 +726,58 @@ export default function AdminSlotsPage() {
               {slots.map((slot) => {
                 const isAvailable = slot.status === "available";
                 const isBooked = slot.status === "booked";
+                const isSelected = selectedSlotIds.includes(slot.id);
+                const isOverlapping = overlappingSlotIds.has(slot.id);
 
                 return (
                   <div
                     key={slot.id}
-                    className={`flex flex-col justify-between rounded-2xl border p-5 transition ${
-                      isAvailable
+                    onClick={() => {
+                      if (!isBooked) handleToggleSelect(slot.id, false);
+                    }}
+                    className={`group relative flex flex-col justify-between rounded-2xl border p-5 transition cursor-pointer ${
+                      isSelected
+                        ? "border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 shadow-md"
+                        : isOverlapping
+                        ? "border-rose-300 bg-rose-50/25 hover:border-rose-400 shadow-xs"
+                        : isAvailable
                         ? "border-zinc-200 bg-white hover:border-zinc-300 shadow-xs"
-                        : "border-zinc-300 bg-zinc-50/80 shadow-xs"
+                        : "border-zinc-300 bg-zinc-50/80 shadow-xs cursor-default"
                     }`}
                   >
                     <div>
-                      {/* Top Row: Date & Status Badge */}
+                      {/* Top Row: Checkbox, Date & Status Badge */}
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
-                          <Calendar className="h-3.5 w-3.5 text-zinc-500" />
-                          <span>{slot.date}</span>
-                        </span>
+                        <div className="flex items-center gap-2.5">
+                          {isBooked ? (
+                            <div
+                              title="Booked slots cannot be bulk-deleted directly. Use 'Manage Slot' to release first."
+                              className="h-4 w-4 rounded border border-zinc-200 bg-zinc-100 flex items-center justify-center cursor-not-allowed opacity-60"
+                            >
+                              <Lock className="h-2.5 w-2.5 text-zinc-400" />
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleSelect(slot.id, false);
+                              }}
+                              className={`h-4 w-4 rounded border flex items-center justify-center transition ${
+                                isSelected
+                                  ? "bg-emerald-600 border-emerald-600 text-white"
+                                  : "border-zinc-300 bg-white hover:border-emerald-500"
+                              }`}
+                            >
+                              {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
+                            </button>
+                          )}
+
+                          <span className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
+                            <Calendar className="h-3.5 w-3.5 text-zinc-500" />
+                            <span>{slot.date}</span>
+                          </span>
+                        </div>
 
                         <span
                           className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${
@@ -526,6 +794,14 @@ export default function AdminSlotsPage() {
                           <span>{slot.status}</span>
                         </span>
                       </div>
+
+                      {/* Overlapping Contradiction Badge */}
+                      {isOverlapping && (
+                        <div className="mt-2.5 inline-flex items-center gap-1 rounded-full bg-rose-100 border border-rose-200 px-2.5 py-0.5 text-[10px] font-bold text-rose-800">
+                          <AlertTriangle className="h-2.5 w-2.5 text-rose-600 shrink-0" />
+                          <span>Contradicting / Overlapping Slot</span>
+                        </div>
+                      )}
 
                       {/* Time */}
                       <div className="mt-3 flex items-center gap-2">
@@ -549,7 +825,10 @@ export default function AdminSlotsPage() {
                     </div>
 
                     {/* Actions: Manage Slot Modal & Delete */}
-                    <div className="mt-5 flex items-center justify-between border-t border-zinc-100 pt-3.5">
+                    <div
+                      className="mt-5 flex items-center justify-between border-t border-zinc-100 pt-3.5"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       {/* Manage Slot Modal Button */}
                       <button
                         type="button"
@@ -1086,6 +1365,96 @@ export default function AdminSlotsPage() {
           </div>
         </div>
       )}
+
+      {/* FLOATING BULK ACTIONS BAR */}
+      {selectedSlotIds.length > 0 && (
+        <div className="fixed bottom-6 inset-x-0 z-40 max-w-xl mx-auto px-4 animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <div className="flex items-center justify-between gap-4 rounded-2xl bg-zinc-950 p-4 text-white shadow-2xl border border-zinc-800 backdrop-blur-md">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/30">
+                {selectedSlotIds.length}
+              </div>
+              <div>
+                <p className="text-xs font-bold leading-tight">
+                  {selectedSlotIds.length} slot{selectedSlotIds.length === 1 ? "" : "s"} selected
+                </p>
+                <button
+                  type="button"
+                  onClick={handleDeselectAll}
+                  className="text-[11px] text-zinc-400 hover:text-white underline mt-0.5"
+                >
+                  Deselect All
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowBulkDeleteModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-rose-500 transition"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>Delete Selected ({selectedSlotIds.length})</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BULK DELETE CONFIRMATION MODAL */}
+      {showBulkDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-zinc-100">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 mb-4">
+              <Trash2 className="h-6 w-6" />
+            </div>
+
+            <h3 className="text-base font-bold text-zinc-950">
+              Delete {selectedSlotIds.length} Time Slot{selectedSlotIds.length === 1 ? "" : "s"}?
+            </h3>
+
+            <p className="mt-2 text-xs text-zinc-600 leading-relaxed">
+              This will permanently remove the selected slots from the schedule. Students will no longer be able to view or book them.
+            </p>
+
+            <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/80 p-3 text-xs text-emerald-900">
+              <p className="font-semibold flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-700 shrink-0" />
+                <span>Safe Deletion Guarantee</span>
+              </p>
+              <p className="text-[11px] text-emerald-800 mt-0.5">
+                Any slot currently booked by a student is automatically preserved to protect active lessons.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-zinc-100">
+              <button
+                type="button"
+                disabled={bulkDeleting}
+                onClick={() => setShowBulkDeleteModal(false)}
+                className="rounded-xl border border-zinc-200 px-4 py-2 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={bulkDeleting}
+                onClick={handleConfirmBulkDelete}
+                className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-rose-500 transition disabled:opacity-50"
+              >
+                {bulkDeleting ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5" />
+                )}
+                <span>{bulkDeleting ? "Deleting..." : `Yes, Delete ${selectedSlotIds.length} Slots`}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

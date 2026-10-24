@@ -3,7 +3,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createBatchSlotsAction } from "@/lib/actions/slots";
+import {
+  createBatchSlotsAction,
+  getExistingSlotsForDatesAction,
+} from "@/lib/actions/slots";
+import { doSlotsOverlap } from "@/lib/slotUtils";
 import { useForm } from "@/lib/useForm";
 import {
   ArrowLeft,
@@ -19,6 +23,7 @@ import {
   ChevronRight,
   Trash2,
   AlertCircle,
+  AlertTriangle,
   RotateCcw,
 } from "lucide-react";
 
@@ -107,11 +112,39 @@ export default function AdminAdvancedNewSlotsPage() {
   // Generated slot boxes grouped by date: { [dateStr]: GeneratedSlot[] }
   const [slotsByDate, setSlotsByDate] = useState<Record<string, GeneratedSlot[]>>({});
 
+  // Existing slots in database for the selected dates (to prevent contradiction bugs)
+  const [existingDbSlots, setExistingDbSlots] = useState<
+    Array<{
+      id: string;
+      date: string;
+      startTime: string;
+      endTime: string;
+      time: string;
+      instructor?: string;
+      status: string;
+    }>
+  >([]);
+
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const viewYear = viewDate.getFullYear();
   const viewMonth = viewDate.getMonth();
+
+  // Load existing database slots whenever selected dates change
+  useEffect(() => {
+    if (selectedDates.length === 0) {
+      setExistingDbSlots([]);
+      return;
+    }
+    let isMounted = true;
+    getExistingSlotsForDatesAction(selectedDates).then((res) => {
+      if (isMounted) setExistingDbSlots(res);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedDates]);
 
   // Multi-date toggle
   const toggleDateSelection = (dateStr: string) => {
@@ -186,6 +219,11 @@ export default function AdminAdvancedNewSlotsPage() {
     });
 
     setSlotsByDate(updatedMap);
+
+    // Refresh existing slots in database for selected dates
+    getExistingSlotsForDatesAction(selectedDates).then((res) => {
+      setExistingDbSlots(res);
+    });
   };
 
   // Generate standard presets: 5 standard driving lesson shifts
@@ -217,6 +255,11 @@ export default function AdminAdvancedNewSlotsPage() {
     });
 
     setSlotsByDate(updatedMap);
+
+    // Refresh existing slots in database for selected dates
+    getExistingSlotsForDatesAction(selectedDates).then((res) => {
+      setExistingDbSlots(res);
+    });
   };
 
   // Remove individual slot box via cross (x)
@@ -250,10 +293,64 @@ export default function AdminAdvancedNewSlotsPage() {
     return Object.values(slotsByDate).reduce((acc, curr) => acc + curr.length, 0);
   }, [slotsByDate]);
 
+  // Compute all contradicting / overlapping slots (against both DB and batch duplicates)
+  const slotConflicts = useMemo(() => {
+    const conflicts: Record<string, string> = {};
+    const allGenSlots = Object.values(slotsByDate).flat();
+
+    for (const slot of allGenSlots) {
+      // 1. Check against existing slots in database on that date
+      const dbSlotsOnDate = existingDbSlots.filter((d) => d.date === slot.date);
+      for (const dbSlot of dbSlotsOnDate) {
+        if (doSlotsOverlap(slot, dbSlot)) {
+          conflicts[slot.tempId] = `Overlaps with existing scheduled slot (${dbSlot.time || `${dbSlot.startTime} – ${dbSlot.endTime}`})`;
+          break;
+        }
+      }
+
+      // 2. Check against other generated slots in batch on that date
+      if (!conflicts[slot.tempId]) {
+        for (const other of allGenSlots) {
+          if (other.tempId !== slot.tempId && other.date === slot.date) {
+            if (doSlotsOverlap(slot, other)) {
+              conflicts[slot.tempId] = `Overlaps with batch slot (${other.startTime} – ${other.endTime})`;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    return conflicts;
+  }, [slotsByDate, existingDbSlots]);
+
+  const totalConflictCount = Object.keys(slotConflicts).length;
+
+  // Auto-remove all conflicting overlapping slots
+  const handleAutoRemoveConflicts = () => {
+    setSlotsByDate((prev) => {
+      const updated: Record<string, GeneratedSlot[]> = {};
+      Object.entries(prev).forEach(([dateStr, list]) => {
+        const cleanList = list.filter((s) => !slotConflicts[s.tempId]);
+        if (cleanList.length > 0) {
+          updated[dateStr] = cleanList;
+        }
+      });
+      return updated;
+    });
+  };
+
   // Submit and write all slots to Firebase in batch
   const handleConfirmAndAddSlots = async () => {
     if (totalSlotsCount === 0) {
       setErrorMsg("Please generate at least one slot box before confirming.");
+      return;
+    }
+
+    if (totalConflictCount > 0) {
+      setErrorMsg(
+        `Cannot add slots: ${totalConflictCount} contradicting/overlapping slot(s) detected. Please click 'Auto-Remove Overlapping Slots' or remove them individually before saving.`
+      );
       return;
     }
 
@@ -549,10 +646,45 @@ export default function AdminAdvancedNewSlotsPage() {
               </p>
             </div>
 
-            <span className="self-start sm:self-auto rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
-              {totalSlotsCount} slot{totalSlotsCount === 1 ? "" : "s"} ready to add
-            </span>
+            <div className="flex items-center gap-2">
+              {totalConflictCount > 0 && (
+                <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-800">
+                  {totalConflictCount} conflict{totalConflictCount === 1 ? "" : "s"}
+                </span>
+              )}
+              <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
+                {totalSlotsCount} slot{totalSlotsCount === 1 ? "" : "s"} ready to add
+              </span>
+            </div>
           </div>
+
+          {/* Contradicting Slots Warning Banner with Auto-Remove Button */}
+          {totalConflictCount > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-300 bg-rose-50/90 p-4 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-200 text-rose-800 shrink-0">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-rose-950">
+                    {totalConflictCount} Contradicting / Overlapping Slot{totalConflictCount === 1 ? "" : "s"} Detected
+                  </h4>
+                  <p className="text-[11px] text-rose-800">
+                    These slots conflict with existing appointments or duplicate another time. Overlapping slots are blocked from saving.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleAutoRemoveConflicts}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-rose-700 transition"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>Auto-Remove Overlapping Slots ({totalConflictCount})</span>
+              </button>
+            </div>
+          )}
 
           {Object.keys(slotsByDate).length === 0 ? (
             <div className="py-12 text-center text-zinc-400 border border-dashed border-zinc-200 rounded-xl">
@@ -595,33 +727,62 @@ export default function AdminAdvancedNewSlotsPage() {
 
                     {/* Button-Shaped Slot Boxes with Cross (X) */}
                     <div className="flex flex-wrap gap-2.5">
-                      {dateSlots.map((slot) => (
-                        <div
-                          key={slot.tempId}
-                          className="group inline-flex items-center gap-2 rounded-xl border border-zinc-300 bg-white px-3.5 py-2 text-xs font-semibold text-zinc-900 shadow-xs hover:border-zinc-400 transition"
-                        >
-                          <div className="flex items-center gap-1.5">
-                            <Clock className="h-3 w-3 text-zinc-400" />
-                            <span>
-                              {slot.startTime} – {slot.endTime}
-                            </span>
-                            <span className="text-[10px] text-zinc-400 font-normal">
-                              ({slot.duration})
-                            </span>
-                          </div>
-
-                          {/* Cross (X) Button to remove this slot box */}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveSingleSlot(dateStr, slot.tempId)}
-                            className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 hover:bg-red-100 hover:text-red-600 transition"
-                            title="Remove this slot"
-                            aria-label={`Remove slot ${slot.startTime} on ${dateStr}`}
+                      {dateSlots.map((slot) => {
+                        const conflictReason = slotConflicts[slot.tempId];
+                        return (
+                          <div
+                            key={slot.tempId}
+                            className={`group inline-flex flex-col gap-1 rounded-xl border p-2.5 text-xs font-semibold shadow-xs transition ${
+                              conflictReason
+                                ? "border-rose-400 bg-rose-50 text-rose-950"
+                                : "border-zinc-300 bg-white text-zinc-900 hover:border-zinc-400"
+                            }`}
                           >
-                            <X className="h-3 w-3 stroke-[2.5]" />
-                          </button>
-                        </div>
-                      ))}
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-1.5">
+                                <Clock
+                                  className={`h-3 w-3 ${
+                                    conflictReason ? "text-rose-500" : "text-zinc-400"
+                                  }`}
+                                />
+                                <span>
+                                  {slot.startTime} – {slot.endTime}
+                                </span>
+                                <span
+                                  className={`text-[10px] font-normal ${
+                                    conflictReason ? "text-rose-600" : "text-zinc-400"
+                                  }`}
+                                >
+                                  ({slot.duration})
+                                </span>
+                              </div>
+
+                              {/* Cross (X) Button to remove this slot box */}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveSingleSlot(dateStr, slot.tempId)}
+                                className={`ml-1 flex h-5 w-5 items-center justify-center rounded-full transition ${
+                                  conflictReason
+                                    ? "bg-rose-200 text-rose-800 hover:bg-rose-300"
+                                    : "bg-zinc-100 text-zinc-500 hover:bg-red-100 hover:text-red-600"
+                                }`}
+                                title="Remove this slot"
+                                aria-label={`Remove slot ${slot.startTime} on ${dateStr}`}
+                              >
+                                <X className="h-3 w-3 stroke-[2.5]" />
+                              </button>
+                            </div>
+
+                            {/* Overlapping conflict warning note */}
+                            {conflictReason && (
+                              <p className="text-[10px] text-rose-700 font-medium flex items-center gap-1 pt-0.5">
+                                <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
+                                <span>{conflictReason}</span>
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -629,15 +790,23 @@ export default function AdminAdvancedNewSlotsPage() {
           )}
         </div>
 
-        {/* 4. CONFIRM AND ADD SLOTS OPTION AT BOTTOM (Exact Request!) */}
+        {/* 4. CONFIRM AND ADD SLOTS OPTION AT BOTTOM */}
         <div className="sticky bottom-4 z-20 rounded-2xl border border-zinc-200 bg-white/95 p-4 sm:p-5 shadow-xl backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <p className="text-sm font-bold text-zinc-900">
               Ready to Publish Lesson Schedule?
             </p>
             <p className="text-xs text-zinc-500">
-              Total {totalSlotsCount} slot box{totalSlotsCount === 1 ? "" : "es"} across{" "}
-              {Object.keys(slotsByDate).length} date(s) will be created with real Firebase document IDs.
+              {totalConflictCount > 0 ? (
+                <span className="text-rose-600 font-semibold">
+                  ⚠️ Resolve {totalConflictCount} overlapping slot(s) before publishing.
+                </span>
+              ) : (
+                <>
+                  Total {totalSlotsCount} slot box{totalSlotsCount === 1 ? "" : "es"} across{" "}
+                  {Object.keys(slotsByDate).length} date(s) will be created with real Firebase document IDs.
+                </>
+              )}
             </p>
           </div>
 
@@ -652,7 +821,7 @@ export default function AdminAdvancedNewSlotsPage() {
             <button
               type="button"
               onClick={handleConfirmAndAddSlots}
-              disabled={submitting || totalSlotsCount === 0}
+              disabled={submitting || totalSlotsCount === 0 || totalConflictCount > 0}
               className="w-1/2 sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900 px-7 py-3 text-xs font-bold text-white shadow-md hover:bg-zinc-800 transition active:scale-95 disabled:opacity-50"
             >
               {submitting ? (
@@ -663,6 +832,8 @@ export default function AdminAdvancedNewSlotsPage() {
               <span>
                 {submitting
                   ? "Adding Slots..."
+                  : totalConflictCount > 0
+                  ? `Fix Conflicts (${totalConflictCount})`
                   : `Confirm & Add ${totalSlotsCount} Slots`}
               </span>
             </button>

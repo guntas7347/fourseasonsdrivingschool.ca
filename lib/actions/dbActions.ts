@@ -13,6 +13,7 @@ export {
   createSlotAction,
   updateSlotStatusAction,
   deleteSlotAction,
+  deleteBatchSlotsAction,
   type SlotItem,
 } from "./slots";
 
