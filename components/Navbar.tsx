@@ -66,6 +66,12 @@ export default function Navbar() {
           >
             FAQs
           </Link>
+          <Link
+            href="/policy"
+            className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-950"
+          >
+            Policy
+          </Link>
         </nav>
 
         {/* CTA Actions */}
@@ -147,11 +153,18 @@ export default function Navbar() {
               Photo Gallery
             </Link>
             <Link
-              href="#faqs"
+              href="/#faqs"
               onClick={() => setMobileMenuOpen(false)}
               className="rounded-lg px-3 py-2 text-base font-medium text-zinc-800 hover:bg-zinc-50"
             >
               FAQs
+            </Link>
+            <Link
+              href="/policy"
+              onClick={() => setMobileMenuOpen(false)}
+              className="rounded-lg px-3 py-2 text-base font-medium text-zinc-800 hover:bg-zinc-50"
+            >
+              School Policy &amp; Rates
             </Link>
             <div className="mt-2 border-t border-zinc-100 pt-3 flex flex-col gap-3">
               <a

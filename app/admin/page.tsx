@@ -18,6 +18,8 @@ import {
   Loader2,
 } from "lucide-react";
 
+import HardRefreshButton from "@/components/admin/HardRefreshButton";
+
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,6 +52,7 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
+            <HardRefreshButton variant="dashboard" />
             <Link
               href="/admin/packages/new"
               className="inline-flex items-center gap-1.5 rounded-xl bg-zinc-900 px-4 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-zinc-800"

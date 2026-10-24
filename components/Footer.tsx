@@ -83,6 +83,22 @@ export default function Footer() {
                   Photo Gallery
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/policy"
+                  className="hover:text-white transition-colors"
+                >
+                  School Policy &amp; Rates
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/privacy"
+                  className="hover:text-white transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -139,6 +155,15 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-zinc-900 pt-8 text-xs text-zinc-500 sm:flex-row">
           <p>&copy; 2026 Four Seasons Driving School. All rights reserved.</p>
+          <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-zinc-500">
+            <Link href="/policy" className="hover:text-zinc-300 transition-colors">
+              School Policy &amp; Terms
+            </Link>
+            <span>&bull;</span>
+            <Link href="/privacy" className="hover:text-zinc-300 transition-colors">
+              Privacy Policy
+            </Link>
+          </div>
           <p className="text-center sm:text-right">
             Dual-control certified training vehicles • Serving Surrey & Greater
             Vancouver

@@ -27,6 +27,7 @@ import {
 import { auth, googleLogin } from "@/lib/firebase/googleLogin";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { checkIsEmailAuthorizedAction } from "@/lib/actions/config";
+import HardRefreshButton from "./HardRefreshButton";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -351,6 +352,11 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
           })}
         </nav>
 
+        {/* Hard Cache Refresh Tool */}
+        <div className="px-4 pb-3">
+          <HardRefreshButton variant="sidebar" />
+        </div>
+
         {/* User Card & Sign Out */}
         <div className="border-t border-zinc-100 p-4">
           <div className="mb-3 flex items-center gap-3">
@@ -444,7 +450,10 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
                 );
               })}
             </nav>
-            <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between">
+            <div className="pt-2">
+              <HardRefreshButton variant="sidebar" />
+            </div>
+            <div className="mt-3 pt-3 border-t border-zinc-100 flex items-center justify-between">
               <span className="text-xs text-zinc-500 truncate">
                 {user.email}
               </span>
