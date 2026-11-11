@@ -38,14 +38,18 @@ export default function PrivacyPage() {
               {/* Badge */}
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-50 px-4 py-1.5 text-xs font-semibold text-emerald-800 shadow-xs">
                 <Lock className="h-4 w-4 text-emerald-600" />
-                <span>BC Personal Information Protection Act (PIPA) Compliant</span>
+                <span>
+                  BC Personal Information Protection Act (PIPA) Compliant
+                </span>
               </div>
 
               <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-zinc-950 sm:text-5xl">
                 Privacy Policy
               </h1>
               <p className="mt-4 text-base sm:text-lg leading-relaxed text-zinc-600">
-                Four Seasons Driving School is dedicated to protecting the privacy, confidentiality, and security of our students&apos; personal information and driver records.
+                Four Seasons Driving School is dedicated to protecting the
+                privacy, confidentiality, and security of our students&apos;
+                personal information and driver records.
               </p>
 
               {/* Policy & Privacy Tabs */}
@@ -64,7 +68,8 @@ export default function PrivacyPage() {
               </div>
 
               <p className="mt-4 text-xs font-medium text-zinc-400">
-                Effective Date: {lastUpdated} &bull; Applicable to all enrolled students and website visitors
+                Effective Date: {lastUpdated} &bull; Applicable to all enrolled
+                students and website visitors
               </p>
             </div>
           </div>
@@ -73,7 +78,6 @@ export default function PrivacyPage() {
         {/* Content Section */}
         <section className="py-12 sm:py-16">
           <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 space-y-10">
-
             {/* 1. Commitment to Privacy */}
             <article className="rounded-2xl border border-zinc-200 bg-white p-6 sm:p-8 shadow-xs space-y-3">
               <div className="flex items-center gap-3 border-b border-zinc-100 pb-3">
@@ -85,7 +89,18 @@ export default function PrivacyPage() {
                 </h2>
               </div>
               <p className="text-sm leading-relaxed text-zinc-600">
-                Four Seasons Driving School (&quot;we&quot;, &quot;our&quot;, or &quot;the School&quot;) operates an ICBC-certified driver training institution in Surrey, British Columbia. In compliance with British Columbia&apos;s <em>Personal Information Protection Act</em> (PIPA) and Canada&apos;s <em>Personal Information Protection and Electronic Documents Act</em> (PIPEDA), this Privacy Policy outlines how we collect, utilize, safeguard, and disclose personal data gathered through our website, online booking portal, and in-car training programs.
+                Four Seasons Driving School (&quot;we&quot;, &quot;our&quot;, or
+                &quot;the School&quot;) operates an -certified driver training
+                institution in Surrey, British Columbia. In compliance with
+                British Columbia&apos;s{" "}
+                <em>Personal Information Protection Act</em> (PIPA) and
+                Canada&apos;s{" "}
+                <em>
+                  Personal Information Protection and Electronic Documents Act
+                </em>{" "}
+                (PIPEDA), this Privacy Policy outlines how we collect, utilize,
+                safeguard, and disclose personal data gathered through our
+                website, online booking portal, and in-car training programs.
               </p>
             </article>
 
@@ -100,31 +115,49 @@ export default function PrivacyPage() {
                 </h2>
               </div>
               <p className="text-sm text-zinc-600 leading-relaxed">
-                To provide safe, certified driving instruction and meet statutory vehicle training regulations, we collect the following student information:
+                To provide safe, certified driving instruction and meet
+                statutory vehicle training regulations, we collect the following
+                student information:
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
                 <div className="rounded-xl border border-zinc-200/80 bg-zinc-50/70 p-4 space-y-1.5">
-                  <span className="font-bold text-zinc-900 block">Contact &amp; Identification</span>
+                  <span className="font-bold text-zinc-900 block">
+                    Contact &amp; Identification
+                  </span>
                   <p className="text-zinc-600 leading-relaxed">
-                    Student legal first and last name, email address, telephone number, and residential address (for lesson pick-up and drop-off coordination).
+                    Student legal first and last name, email address, telephone
+                    number, and residential address (for lesson pick-up and
+                    drop-off coordination).
                   </p>
                 </div>
                 <div className="rounded-xl border border-zinc-200/80 bg-zinc-50/70 p-4 space-y-1.5">
-                  <span className="font-bold text-zinc-900 block">Driver&apos;s License Details</span>
+                  <span className="font-bold text-zinc-900 block">
+                    Driver&apos;s License Details
+                  </span>
                   <p className="text-zinc-600 leading-relaxed">
-                    BC Driver&apos;s License or Class 7L Learner&apos;s Permit number, license class, expiration date, or valid foreign driver&apos;s license credentials required before driving.
+                    BC Driver&apos;s License or Class 7L Learner&apos;s Permit
+                    number, license class, expiration date, or valid foreign
+                    driver&apos;s license credentials required before driving.
                   </p>
                 </div>
                 <div className="rounded-xl border border-zinc-200/80 bg-zinc-50/70 p-4 space-y-1.5">
-                  <span className="font-bold text-zinc-900 block">Road Test &amp; Training Records</span>
+                  <span className="font-bold text-zinc-900 block">
+                    Road Test &amp; Training Records
+                  </span>
                   <p className="text-zinc-600 leading-relaxed">
-                    Scheduled appointment times, lesson progress evaluations, test center location preferences, and signed ICBC road test consent and release authorization forms.
+                    Scheduled appointment times, lesson progress evaluations,
+                    test center location preferences, and signed road test
+                    consent and release authorization forms.
                   </p>
                 </div>
                 <div className="rounded-xl border border-zinc-200/80 bg-zinc-50/70 p-4 space-y-1.5">
-                  <span className="font-bold text-zinc-900 block">Payment &amp; Transaction Ledger</span>
+                  <span className="font-bold text-zinc-900 block">
+                    Payment &amp; Transaction Ledger
+                  </span>
                   <p className="text-zinc-600 leading-relaxed">
-                    Stripe transaction reference IDs, package purchase receipts, payment timestamps, and card type/last-4 digits for receipt generation.
+                    Stripe transaction reference IDs, package purchase receipts,
+                    payment timestamps, and card type/last-4 digits for receipt
+                    generation.
                   </p>
                 </div>
               </div>
@@ -142,19 +175,30 @@ export default function PrivacyPage() {
               </div>
               <ul className="space-y-2 text-sm text-zinc-600 leading-relaxed list-disc pl-5">
                 <li>
-                  <strong>Statutory Driving Verification:</strong> Verifying that each student possesses a valid BC learner&apos;s permit or license prior to operating dual-control certified training vehicles, in accordance with the BC Motor Vehicle Act.
+                  <strong>Statutory Driving Verification:</strong> Verifying
+                  that each student possesses a valid BC learner&apos;s permit
+                  or license prior to operating dual-control certified training
+                  vehicles, in accordance with the BC Motor Vehicle Act.
                 </li>
                 <li>
-                  <strong>Lesson Coordination &amp; Logistics:</strong> Scheduling appointments, planning pick-up and drop-off routes in Surrey and neighbouring municipalities, and sending reminder notifications.
+                  <strong>Lesson Coordination &amp; Logistics:</strong>{" "}
+                  Scheduling appointments, planning pick-up and drop-off routes
+                  in Surrey and neighbouring municipalities, and sending
+                  reminder notifications.
                 </li>
                 <li>
-                  <strong>Road Test Booking on Student&apos;s Behalf:</strong> Submitting student details to ICBC test booking centers when authorized by a signed consent and release agreement.
+                  <strong>Road Test Booking on Student&apos;s Behalf:</strong>{" "}
+                  Submitting student details to test booking centers when
+                  authorized by a signed consent and release agreement.
                 </li>
                 <li>
-                  <strong>Payment &amp; Invoicing:</strong> Processing lesson fees, packages, and issuing official payment receipts.
+                  <strong>Payment &amp; Invoicing:</strong> Processing lesson
+                  fees, packages, and issuing official payment receipts.
                 </li>
                 <li>
-                  <strong>Safety &amp; Customer Support:</strong> Addressing student inquiries, verifying instructor availability, and maintaining student progress records.
+                  <strong>Safety &amp; Customer Support:</strong> Addressing
+                  student inquiries, verifying instructor availability, and
+                  maintaining student progress records.
                 </li>
               </ul>
             </article>
@@ -170,14 +214,20 @@ export default function PrivacyPage() {
                 </h2>
               </div>
               <p className="text-sm leading-relaxed text-zinc-600">
-                All credit and debit card payments conducted via our website are processed directly through <strong>Stripe, Inc.</strong>, a certified PCI-DSS Level 1 Service Provider.
+                All credit and debit card payments conducted via our website are
+                processed directly through <strong>Stripe, Inc.</strong>, a
+                certified PCI-DSS Level 1 Service Provider.
               </p>
               <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 text-xs sm:text-sm text-emerald-950">
-                <strong>Zero Card Storage Policy:</strong> Four Seasons Driving School never stores, views, or logs full credit card numbers, expiry dates, or CVV security codes on our servers. All financial transactions are tokenized and encrypted end-to-end through Stripe Checkout.
+                <strong>Zero Card Storage Policy:</strong> Four Seasons Driving
+                School never stores, views, or logs full credit card numbers,
+                expiry dates, or CVV security codes on our servers. All
+                financial transactions are tokenized and encrypted end-to-end
+                through Stripe Checkout.
               </div>
             </article>
 
-            {/* 5. Disclosure & ICBC Sharing */}
+            {/* 5. Disclosure &   Sharing */}
             <article className="rounded-2xl border border-zinc-200 bg-white p-6 sm:p-8 shadow-xs space-y-3">
               <div className="flex items-center gap-3 border-b border-zinc-100 pb-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
@@ -188,17 +238,26 @@ export default function PrivacyPage() {
                 </h2>
               </div>
               <p className="text-sm leading-relaxed text-zinc-600">
-                We respect your personal information and do not sell, rent, or trade student records under any circumstance. Information is only shared under the following conditions:
+                We respect your personal information and do not sell, rent, or
+                trade student records under any circumstance. Information is
+                only shared under the following conditions:
               </p>
               <ul className="space-y-1.5 text-sm text-zinc-600 leading-relaxed list-disc pl-5">
                 <li>
-                  <strong>ICBC (Insurance Corporation of British Columbia):</strong> Strictly when booking road tests on your behalf with your explicit signed consent, or during mandatory regulatory compliance audits.
+                  <strong> (Insurance Corporation of British Columbia):</strong>{" "}
+                  Strictly when booking road tests on your behalf with your
+                  explicit signed consent, or during mandatory regulatory
+                  compliance audits.
                 </li>
                 <li>
-                  <strong>Certified Instructors:</strong> Providing assigned instructors with your name, phone number, pick-up address, and learning goals for the scheduled lesson.
+                  <strong>Certified Instructors:</strong> Providing assigned
+                  instructors with your name, phone number, pick-up address, and
+                  learning goals for the scheduled lesson.
                 </li>
                 <li>
-                  <strong>Legal Requirements:</strong> If compelled by law enforcement, subpoena, court order, or Motor Vehicle Act regulatory inspectors.
+                  <strong>Legal Requirements:</strong> If compelled by law
+                  enforcement, subpoena, court order, or Motor Vehicle Act
+                  regulatory inspectors.
                 </li>
               </ul>
             </article>
@@ -214,7 +273,13 @@ export default function PrivacyPage() {
                 </h2>
               </div>
               <p className="text-sm leading-relaxed text-zinc-600">
-                Per Section 5 of our School Policy, vehicle occupancy during student training is limited to a maximum of 3 individuals (with up to 1 observer for instructor evaluation or student peer review). Forward-facing dash cameras installed in school vehicles are utilized strictly for road safety, collision prevention, and insurance verification, and are not disseminated publicly.
+                Per Section 5 of our School Policy, vehicle occupancy during
+                student training is limited to a maximum of 3 individuals (with
+                up to 1 observer for instructor evaluation or student peer
+                review). Forward-facing dash cameras installed in school
+                vehicles are utilized strictly for road safety, collision
+                prevention, and insurance verification, and are not disseminated
+                publicly.
               </p>
             </article>
 
@@ -229,7 +294,11 @@ export default function PrivacyPage() {
                 </h2>
               </div>
               <p className="text-sm leading-relaxed text-zinc-600">
-                Under BC PIPA, students have the right to request access to their personal information held in our records, verify its accuracy, and request corrections. Student training records are retained for the period mandated by BC driving school regulatory guidelines, after which they are securely archived or purged.
+                Under BC PIPA, students have the right to request access to
+                their personal information held in our records, verify its
+                accuracy, and request corrections. Student training records are
+                retained for the period mandated by BC driving school regulatory
+                guidelines, after which they are securely archived or purged.
               </p>
             </article>
 
@@ -244,19 +313,29 @@ export default function PrivacyPage() {
                 </h2>
               </div>
               <p className="text-sm leading-relaxed text-zinc-600">
-                If you have questions, concerns, or requests regarding this Privacy Policy or how your personal information is managed, please contact our school administration:
+                If you have questions, concerns, or requests regarding this
+                Privacy Policy or how your personal information is managed,
+                please contact our school administration:
               </p>
               <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-4 space-y-2 text-xs sm:text-sm text-zinc-700">
-                <p className="font-bold text-zinc-950">Four Seasons Driving School</p>
+                <p className="font-bold text-zinc-950">
+                  Four Seasons Driving School
+                </p>
                 <p className="flex items-center gap-2">
                   <Phone className="h-3.5 w-3.5 text-emerald-600" />
-                  <a href="tel:+16045053129" className="font-semibold text-zinc-900 hover:text-emerald-700 transition">
+                  <a
+                    href="tel:+16045053129"
+                    className="font-semibold text-zinc-900 hover:text-emerald-700 transition"
+                  >
                     +1 604-505-3129
                   </a>
                 </p>
                 <p className="flex items-center gap-2">
                   <Mail className="h-3.5 w-3.5 text-emerald-600" />
-                  <a href="mailto:fsdriving84@gmail.com" className="font-semibold text-zinc-900 hover:text-emerald-700 transition">
+                  <a
+                    href="mailto:fsdriving84@gmail.com"
+                    className="font-semibold text-zinc-900 hover:text-emerald-700 transition"
+                  >
                     fsdriving84@gmail.com
                   </a>
                 </p>
@@ -265,7 +344,6 @@ export default function PrivacyPage() {
                 </p>
               </div>
             </article>
-
           </div>
         </section>
       </main>

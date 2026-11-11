@@ -95,7 +95,9 @@ const INITIAL_FIELDS: BookingPageFormFields = {
 export default function BookingsCompletionPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
-  const [confirmedBookingId, setConfirmedBookingId] = useState<string | null>(null);
+  const [confirmedBookingId, setConfirmedBookingId] = useState<string | null>(
+    null,
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Using useForm as requested
@@ -184,7 +186,7 @@ export default function BookingsCompletionPage() {
             JSON.stringify({
               ...bookingPayload,
               id: res.bookingId,
-            })
+            }),
           );
         }
 
@@ -220,12 +222,16 @@ export default function BookingsCompletionPage() {
                   Appointment &amp; Lesson Confirmed!
                 </h1>
                 <p className="mt-2 text-sm text-zinc-600 max-w-md mx-auto">
-                  Your lesson slot is officially reserved with Four Seasons Driving School. We have sent a confirmation copy to <strong>{form.email}</strong>.
+                  Your lesson slot is officially reserved with Four Seasons
+                  Driving School. We have sent a confirmation copy to{" "}
+                  <strong>{form.email}</strong>.
                 </p>
 
                 <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-4 py-1.5 text-xs font-mono font-bold text-zinc-800">
                   <span>Booking Reference:</span>
-                  <span className="text-emerald-700">#{confirmedBookingId.toUpperCase()}</span>
+                  <span className="text-emerald-700">
+                    #{confirmedBookingId.toUpperCase()}
+                  </span>
                 </div>
               </div>
 
@@ -249,7 +255,9 @@ export default function BookingsCompletionPage() {
                     <dt className="text-xs font-medium uppercase tracking-wider text-zinc-400">
                       Phone Number
                     </dt>
-                    <dd className="font-semibold text-zinc-800 mt-0.5">{form.phone}</dd>
+                    <dd className="font-semibold text-zinc-800 mt-0.5">
+                      {form.phone}
+                    </dd>
                   </div>
 
                   <div>
@@ -257,7 +265,8 @@ export default function BookingsCompletionPage() {
                       Slot Session Type &amp; Rate
                     </dt>
                     <dd className="font-bold text-zinc-900 mt-0.5">
-                      {form.slotTypeName || "Standard 90-Min Lesson"} ({form.slotTypePrice || "$110"})
+                      {form.slotTypeName || "Standard 90-Min Lesson"} (
+                      {form.slotTypePrice || "$110"})
                     </dd>
                   </div>
 
@@ -292,7 +301,9 @@ export default function BookingsCompletionPage() {
                     <dt className="text-xs font-medium uppercase tracking-wider text-zinc-400">
                       Training Vehicle
                     </dt>
-                    <dd className="text-zinc-700 mt-0.5">Dual-Control Certified Vehicle</dd>
+                    <dd className="text-zinc-700 mt-0.5">
+                      Dual-Control Certified Vehicle
+                    </dd>
                   </div>
 
                   <div>
@@ -300,7 +311,8 @@ export default function BookingsCompletionPage() {
                       Driver License
                     </dt>
                     <dd className="text-zinc-700 mt-0.5">
-                      {form.licenseClass} ({form.licenseNumber || "LDL pending"})
+                      {form.licenseClass} ({form.licenseNumber || "LDL pending"}
+                      )
                     </dd>
                   </div>
 
@@ -371,7 +383,8 @@ export default function BookingsCompletionPage() {
                   Review Details &amp; Confirm Booking
                 </h1>
                 <p className="mt-1 text-sm text-zinc-500">
-                  Please verify your information, add optional payment details, and confirm your driving lesson slot.
+                  Please verify your information, add optional payment details,
+                  and confirm your driving lesson slot.
                 </p>
               </div>
 
@@ -385,7 +398,9 @@ export default function BookingsCompletionPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800">
-                          {form.slotTypeName ? `Session: ${form.slotTypeName}` : "Lesson Package Selected"}
+                          {form.slotTypeName
+                            ? `Session: ${form.slotTypeName}`
+                            : "Lesson Package Selected"}
                         </span>
                         {form.slotTypePrice && (
                           <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
@@ -393,13 +408,19 @@ export default function BookingsCompletionPage() {
                           </span>
                         )}
                       </div>
-                      <h2 className="text-lg font-bold text-zinc-950">{form.packageName}</h2>
+                      <h2 className="text-lg font-bold text-zinc-950">
+                        {form.packageName}
+                      </h2>
                     </div>
                   </div>
 
                   <div className="sm:text-right">
-                    <span className="text-3xl font-black text-zinc-950">{form.slotTypePrice || form.packagePrice}</span>
-                    <span className="block text-[11px] text-zinc-500 font-medium">CAD Total</span>
+                    <span className="text-3xl font-black text-zinc-950">
+                      {form.slotTypePrice || form.packagePrice}
+                    </span>
+                    <span className="block text-[11px] text-zinc-500 font-medium">
+                      CAD Total
+                    </span>
                   </div>
                 </div>
 
@@ -447,7 +468,10 @@ export default function BookingsCompletionPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="firstName" className="block text-xs font-semibold text-zinc-700">
+                      <label
+                        htmlFor="firstName"
+                        className="block text-xs font-semibold text-zinc-700"
+                      >
                         First Name <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -462,7 +486,10 @@ export default function BookingsCompletionPage() {
                     </div>
 
                     <div>
-                      <label htmlFor="lastName" className="block text-xs font-semibold text-zinc-700">
+                      <label
+                        htmlFor="lastName"
+                        className="block text-xs font-semibold text-zinc-700"
+                      >
                         Last Name <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -477,7 +504,10 @@ export default function BookingsCompletionPage() {
                     </div>
 
                     <div>
-                      <label htmlFor="email" className="block text-xs font-semibold text-zinc-700">
+                      <label
+                        htmlFor="email"
+                        className="block text-xs font-semibold text-zinc-700"
+                      >
                         Email Address <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -492,7 +522,10 @@ export default function BookingsCompletionPage() {
                     </div>
 
                     <div>
-                      <label htmlFor="phone" className="block text-xs font-semibold text-zinc-700">
+                      <label
+                        htmlFor="phone"
+                        className="block text-xs font-semibold text-zinc-700"
+                      >
                         Phone No <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -507,8 +540,12 @@ export default function BookingsCompletionPage() {
                     </div>
 
                     <div className="sm:col-span-2">
-                      <label htmlFor="street" className="block text-xs font-semibold text-zinc-700">
-                        Pickup Street Address <span className="text-red-500">*</span>
+                      <label
+                        htmlFor="street"
+                        className="block text-xs font-semibold text-zinc-700"
+                      >
+                        Pickup Street Address{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -526,12 +563,15 @@ export default function BookingsCompletionPage() {
                 {/* 2. Driver's License & Road Test Questions */}
                 <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs space-y-5">
                   <h3 className="text-base font-bold text-zinc-900 border-b border-zinc-100 pb-3">
-                    2. ICBC Driver&apos;s License &amp; Road Test Info
+                    2. Driver&apos;s License &amp; Road Test Info
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                      <label htmlFor="licenseNumber" className="block text-xs font-semibold text-zinc-700">
+                      <label
+                        htmlFor="licenseNumber"
+                        className="block text-xs font-semibold text-zinc-700"
+                      >
                         Driving License No (LDL#)
                       </label>
                       <input
@@ -546,7 +586,10 @@ export default function BookingsCompletionPage() {
                     </div>
 
                     <div>
-                      <label htmlFor="licenseClass" className="block text-xs font-semibold text-zinc-700">
+                      <label
+                        htmlFor="licenseClass"
+                        className="block text-xs font-semibold text-zinc-700"
+                      >
                         License Class
                       </label>
                       <select
@@ -564,7 +607,10 @@ export default function BookingsCompletionPage() {
                     </div>
 
                     <div>
-                      <label htmlFor="licenseExpiry" className="block text-xs font-semibold text-zinc-700">
+                      <label
+                        htmlFor="licenseExpiry"
+                        className="block text-xs font-semibold text-zinc-700"
+                      >
                         License Expiry Date
                       </label>
                       <input
@@ -581,7 +627,7 @@ export default function BookingsCompletionPage() {
                   {/* Road Test Check */}
                   <div className="pt-2">
                     <label className="block text-xs font-semibold text-zinc-700">
-                      Have you already booked an ICBC road test?
+                      Have you already booked an road test?
                     </label>
                     <div className="mt-2 flex gap-4">
                       <label className="flex items-center gap-2 cursor-pointer text-xs text-zinc-700">
@@ -611,7 +657,10 @@ export default function BookingsCompletionPage() {
                     {form.bookedRoadTest === "yes" && (
                       <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                         <div>
-                          <label htmlFor="roadTestDate" className="block text-xs text-zinc-600">
+                          <label
+                            htmlFor="roadTestDate"
+                            className="block text-xs text-zinc-600"
+                          >
                             Road Test Date
                           </label>
                           <input
@@ -624,8 +673,11 @@ export default function BookingsCompletionPage() {
                           />
                         </div>
                         <div>
-                          <label htmlFor="roadTestLocation" className="block text-xs text-zinc-600">
-                            ICBC Location (e.g. Surrey 152 St)
+                          <label
+                            htmlFor="roadTestLocation"
+                            className="block text-xs text-zinc-600"
+                          >
+                            Location (e.g. Surrey 152 St)
                           </label>
                           <input
                             type="text"
@@ -651,7 +703,8 @@ export default function BookingsCompletionPage() {
                         <span>3. Payment Method</span>
                       </h3>
                       <p className="text-xs text-zinc-500 mt-0.5">
-                        Lesson appointments are confirmed and locked in via secure Stripe card checkout.
+                        Lesson appointments are confirmed and locked in via
+                        secure Stripe card checkout.
                       </p>
                     </div>
 
@@ -668,9 +721,12 @@ export default function BookingsCompletionPage() {
                         <CreditCard className="h-4 w-4 text-emerald-400" />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-zinc-950">Credit or Debit Card</p>
+                        <p className="text-xs font-bold text-zinc-950">
+                          Credit or Debit Card
+                        </p>
                         <p className="text-[11px] text-zinc-500">
-                          Visa, Mastercard, American Express, Apple Pay, Google Pay
+                          Visa, Mastercard, American Express, Apple Pay, Google
+                          Pay
                         </p>
                       </div>
                     </div>
@@ -678,7 +734,10 @@ export default function BookingsCompletionPage() {
                     <div className="border-t border-emerald-200/60 pt-2 text-[11px] text-zinc-600 flex items-start gap-2">
                       <Lock className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
                       <span>
-                        Clicking continue will save your reservation and take you to our dedicated Stripe checkout page where you can securely complete your payment. Cash on spot is not accepted.
+                        Clicking continue will save your reservation and take
+                        you to our dedicated Stripe checkout page where you can
+                        securely complete your payment. Cash on spot is not
+                        accepted.
                       </span>
                     </div>
                   </div>
@@ -703,7 +762,10 @@ export default function BookingsCompletionPage() {
                     ) : (
                       <>
                         <Lock className="h-4 w-4 text-emerald-400" />
-                        <span>Continue to Stripe Checkout ({form.packagePrice || "$110"}) →</span>
+                        <span>
+                          Continue to Stripe Checkout (
+                          {form.packagePrice || "$110"}) →
+                        </span>
                       </>
                     )}
                   </button>

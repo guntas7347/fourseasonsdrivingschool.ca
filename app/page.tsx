@@ -101,11 +101,11 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Top ICBC Badge with Pulsing Radar Beacon */}
+              {/* Top   Badge with Pulsing Radar Beacon */}
               <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200/90 bg-white/90 px-4 py-1.5 text-xs font-semibold text-zinc-800 shadow-xs backdrop-blur-md transition-transform hover:scale-105 duration-200">
                 <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
                 <span>
-                  ICBC Licensed Driving School • Surrey &amp; Metro Vancouver
+                  Licensed Driving School • Surrey &amp; Metro Vancouver
                 </span>
                 <span className="hidden sm:inline-block rounded-full bg-emerald-50 px-2 py-0.2 text-[10px] font-bold text-emerald-700 border border-emerald-200">
                   Class 5 &amp; 7N
@@ -230,7 +230,7 @@ export default function Home() {
               <p className="mt-3 text-base text-zinc-600">
                 We focus on cultivating defensive habits that last a lifetime,
                 ensuring you feel completely calm and prepared when testing at
-                any ICBC driver licensing office.
+                any driver licensing office.
               </p>
             </div>
 

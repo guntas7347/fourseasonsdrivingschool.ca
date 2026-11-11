@@ -21,7 +21,7 @@ export default function WhyChooseUsShowcase() {
       id: "certified",
       number: "01",
       icon: ShieldCheck,
-      title: "ICBC Certified Instructors",
+      title: "  Certified Instructors",
       short: "Licensed, bonded & patient coaching for all levels.",
       detail:
         "Every Four Seasons instructor is certified under the BC Motor Vehicle Act. We specialize in patient, calm guidance designed especially for first-time or nervous learners.",

@@ -31,73 +31,91 @@ const FALLBACK_REVIEWS: GoogleReviewItem[] = [
     authorName: "Gurpreet Singh",
     source: "google",
     score: 5,
-    authorAvatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
-    content: "Passed my Class 5 road test on my very first attempt today at the Surrey 152nd St ICBC! My instructor was incredibly patient and taught me exactly what examiners look for during hazard perception and intersection scans. The mock road test we did the day before was identical to the actual exam route. Best driving school in Surrey!",
+    authorAvatarUrl:
+      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
+    content:
+      "Passed my Class 5 road test on my very first attempt today at the Surrey 152nd St  ! My instructor was incredibly patient and taught me exactly what examiners look for during hazard perception and intersection scans. The mock road test we did the day before was identical to the actual exam route. Best driving school in Surrey!",
     mediaUrl: null,
     authorInitials: "GS",
     publishedAt: "2026-09-28T10:00:00Z",
     relativeDate: "2 weeks ago",
-    sourceUrl: "https://maps.google.com/?q=Four+Seasons+Driving+School+Surrey+BC",
+    sourceUrl:
+      "https://maps.google.com/?q=Four+Seasons+Driving+School+Surrey+BC",
   },
   {
     authorName: "Jessica Miller",
     source: "google",
     score: 5,
-    authorAvatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80",
-    content: "I used to get severe anxiety driving on highways, but Four Seasons completely cured my fear. My instructor was calm, reassuring, and never raised their voice. Parallel parking and reverse stall parking became second nature in just 3 lessons. Plus, free home pick-up made scheduling so convenient!",
+    authorAvatarUrl:
+      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80",
+    content:
+      "I used to get severe anxiety driving on highways, but Four Seasons completely cured my fear. My instructor was calm, reassuring, and never raised their voice. Parallel parking and reverse stall parking became second nature in just 3 lessons. Plus, free home pick-up made scheduling so convenient!",
     mediaUrl: null,
     authorInitials: "JM",
     publishedAt: "2026-09-21T14:30:00Z",
     relativeDate: "3 weeks ago",
-    sourceUrl: "https://maps.google.com/?q=Four+Seasons+Driving+School+Surrey+BC",
+    sourceUrl:
+      "https://maps.google.com/?q=Four+Seasons+Driving+School+Surrey+BC",
   },
   {
     authorName: "Amanpreet Kaur",
     source: "google",
     score: 5,
-    authorAvatarUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80",
-    content: "Booked the 10-lesson package and car rental for my test day. Passed with zero driving errors on my sheet! The dual-brake car was clean, smooth to handle, and very easy to steer. Thank you Four Seasons for helping me get my license on the first try!",
+    authorAvatarUrl:
+      "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80",
+    content:
+      "Booked the 10-lesson package and car rental for my test day. Passed with zero driving errors on my sheet! The dual-brake car was clean, smooth to handle, and very easy to steer. Thank you Four Seasons for helping me get my license on the first try!",
     mediaUrl: null,
     authorInitials: "AK",
     publishedAt: "2026-09-12T16:00:00Z",
     relativeDate: "1 month ago",
-    sourceUrl: "https://maps.google.com/?q=Four+Seasons+Driving+School+Surrey+BC",
+    sourceUrl:
+      "https://maps.google.com/?q=Four+Seasons+Driving+School+Surrey+BC",
   },
   {
     authorName: "David Zhang",
     source: "google",
     score: 5,
-    authorAvatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
-    content: "Super professional service! Everything from the online booking to the pre-test warm-up lesson went seamlessly. The instructor gave me honest constructive feedback after every 90-minute session. Highly recommend to any beginner or Class 7N driver in Metro Vancouver.",
+    authorAvatarUrl:
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
+    content:
+      "Super professional service! Everything from the online booking to the pre-test warm-up lesson went seamlessly. The instructor gave me honest constructive feedback after every 90-minute session. Highly recommend to any beginner or Class 7N driver in Metro Vancouver.",
     mediaUrl: null,
     authorInitials: "DZ",
     publishedAt: "2026-09-08T09:15:00Z",
     relativeDate: "1 month ago",
-    sourceUrl: "https://maps.google.com/?q=Four+Seasons+Driving+School+Surrey+BC",
+    sourceUrl:
+      "https://maps.google.com/?q=Four+Seasons+Driving+School+Surrey+BC",
   },
   {
     authorName: "Navneet Sandhu",
     source: "google",
     score: 5,
-    authorAvatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80",
-    content: "Best driving instructors in Surrey hands down. Very punctual, respectful, and crystal clear explanations on speed control, shoulder checks, and pedestrian awareness. Passed my Class 7 road test without any stress!",
+    authorAvatarUrl:
+      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80",
+    content:
+      "Best driving instructors in Surrey hands down. Very punctual, respectful, and crystal clear explanations on speed control, shoulder checks, and pedestrian awareness. Passed my Class 7 road test without any stress!",
     mediaUrl: null,
     authorInitials: "NS",
     publishedAt: "2026-08-15T11:20:00Z",
     relativeDate: "2 months ago",
-    sourceUrl: "https://maps.google.com/?q=Four+Seasons+Driving+School+Surrey+BC",
+    sourceUrl:
+      "https://maps.google.com/?q=Four+Seasons+Driving+School+Surrey+BC",
   },
   {
     authorName: "Liam Campbell",
     source: "google",
     score: 5,
-    authorAvatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80",
-    content: "Took 5 refresher lessons before my test after moving to BC from another province. The instructor brought me through all the tricky school zones and one-way streets around Surrey. Passed with flying colors!",
+    authorAvatarUrl:
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80",
+    content:
+      "Took 5 refresher lessons before my test after moving to BC from another province. The instructor brought me through all the tricky school zones and one-way streets around Surrey. Passed with flying colors!",
     mediaUrl: null,
     authorInitials: "LC",
     publishedAt: "2026-08-04T13:45:00Z",
     relativeDate: "2 months ago",
-    sourceUrl: "https://maps.google.com/?q=Four+Seasons+Driving+School+Surrey+BC",
+    sourceUrl:
+      "https://maps.google.com/?q=Four+Seasons+Driving+School+Surrey+BC",
   },
 ];
 
@@ -183,7 +201,12 @@ async function fetchFreshFromSerpApi(): Promise<GoogleReviewItem[] | null> {
  */
 export async function syncGoogleReviewsAction(
   force = false,
-): Promise<{ success: boolean; count: number; lastUpdated: string; source: "live_serpapi" | "firestore_cache" | "fallback" }> {
+): Promise<{
+  success: boolean;
+  count: number;
+  lastUpdated: string;
+  source: "live_serpapi" | "firestore_cache" | "fallback";
+}> {
   const docRef = db.collection("settings").doc("google_reviews");
   const now = new Date();
   const nowIso = now.toISOString();
@@ -193,11 +216,19 @@ export async function syncGoogleReviewsAction(
     const doc = await docRef.get();
     const existing = doc.exists ? (doc.data() as StoredGoogleReviewsDoc) : null;
 
-    const lastUpdatedMs = existing?.updatedAtMs || (existing?.lastUpdated ? new Date(existing.lastUpdated).getTime() : 0);
+    const lastUpdatedMs =
+      existing?.updatedAtMs ||
+      (existing?.lastUpdated ? new Date(existing.lastUpdated).getTime() : 0);
     const isMoreThan10DaysOld = nowMs - lastUpdatedMs > TEN_DAYS_MS;
 
     // Check if we need to update
-    if (!force && !isMoreThan10DaysOld && existing && existing.reviews && existing.reviews.length > 0) {
+    if (
+      !force &&
+      !isMoreThan10DaysOld &&
+      existing &&
+      existing.reviews &&
+      existing.reviews.length > 0
+    ) {
       return {
         success: true,
         count: existing.reviews.length,
@@ -210,7 +241,9 @@ export async function syncGoogleReviewsAction(
     const freshReviews = await fetchFreshFromSerpApi();
 
     if (freshReviews && freshReviews.length > 0) {
-      const avg = freshReviews.reduce((sum, r) => sum + (r.score || 5), 0) / freshReviews.length;
+      const avg =
+        freshReviews.reduce((sum, r) => sum + (r.score || 5), 0) /
+        freshReviews.length;
       await docRef.set({
         reviews: freshReviews,
         lastUpdated: nowIso,
@@ -232,7 +265,10 @@ export async function syncGoogleReviewsAction(
     if (existing && existing.reviews && existing.reviews.length > 0) {
       // Keep existing reviews, but bump timestamp if forced
       if (force) {
-        await docRef.set({ ...existing, lastUpdated: nowIso, updatedAtMs: nowMs }, { merge: true });
+        await docRef.set(
+          { ...existing, lastUpdated: nowIso, updatedAtMs: nowMs },
+          { merge: true },
+        );
         await revalidatePaths(["/"]);
       }
       return {

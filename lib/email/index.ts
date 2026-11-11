@@ -74,7 +74,7 @@ WHAT TO EXPECT NEXT:
 
 IMPORTANT REMINDERS:
 --------------------------------------------------------------------------------
-- Bring your physical ICBC Driver's License (Class 7L / 7N / 5) to all lessons.
+- Bring your physical   Driver's License (Class 7L / 7N / 5) to all lessons.
 - Wear comfortable flat footwear (no flip-flops or open sandals).
 
 Need assistance?
@@ -115,7 +115,7 @@ Date:              ${data.date}
 Time Slot:         ${data.time}
 Lesson / Slot Type:${data.slotType || "Standard 90-Min Lesson"}
 Total Fee:         ${data.price || "$110 CAD"}
-Instructor:        ${data.instructor || "Chief ICBC Certified Instructor"}
+Instructor:        ${data.instructor || "Chief   Certified Instructor"}
 Student Name:      ${data.customerName}
 Phone Number:      ${data.phone}
 Email Address:     ${data.email}
@@ -124,7 +124,7 @@ Pickup Address:    ${data.pickupAddress || "Complimentary Doorstep Pickup"}
 
 PRE-LESSON CHECKLIST:
 --------------------------------------------------------------------------------
-✔ Have your physical ICBC Driver's License with you.
+✔ Have your physical   Driver's License with you.
 ✔ Your instructor will arrive in a certified dual-control safety vehicle.
 ✔ Please be ready 5 minutes before your scheduled start time.
 
@@ -151,11 +151,17 @@ export function logConfirmationEmail(emailData: {
   subject: string;
   body: string;
 }) {
-  console.log("\n================================================================================");
+  console.log(
+    "\n================================================================================",
+  );
   console.log(`📧 [EMAIL NOTIFICATION DISPATCHED] -> ${emailData.type}`);
   console.log(`To:      ${emailData.to}`);
   console.log(`Subject: ${emailData.subject}`);
-  console.log("--------------------------------------------------------------------------------");
+  console.log(
+    "--------------------------------------------------------------------------------",
+  );
   console.log(emailData.body);
-  console.log("================================================================================\n");
+  console.log(
+    "================================================================================\n",
+  );
 }

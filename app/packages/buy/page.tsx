@@ -6,7 +6,11 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useForm } from "@/lib/useForm";
-import { getPackagesAction, purchasePackageAction, PackageItem } from "@/lib/actions/packages";
+import {
+  getPackagesAction,
+  purchasePackageAction,
+  PackageItem,
+} from "@/lib/actions/packages";
 import {
   CheckCircle2,
   Package,
@@ -75,7 +79,9 @@ function PackagePurchaseContent() {
   const requestedPkgId = searchParams.get("id");
 
   const [packages, setPackages] = useState<PackageItem[]>([]);
-  const [selectedPackage, setSelectedPackage] = useState<PackageItem | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<PackageItem | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [confirmedOrderId, setConfirmedOrderId] = useState<string | null>(null);
@@ -130,7 +136,9 @@ function PackagePurchaseContent() {
     e.preventDefault();
 
     if (!form.email || !form.phone) {
-      setErrorMessage("Email address and contact phone number are essential for order confirmation and instructor coordination.");
+      setErrorMessage(
+        "Email address and contact phone number are essential for order confirmation and instructor coordination.",
+      );
       return;
     }
 
@@ -198,8 +206,15 @@ function PackagePurchaseContent() {
           </h2>
 
           <p className="mt-3 text-sm sm:text-base text-zinc-600 max-w-xl mx-auto">
-            Thank you, <span className="font-semibold text-zinc-900">{form.firstName}</span>!
-            We have confirmed your purchase of <span className="font-semibold text-zinc-900">{selectedPackage?.name}</span>.
+            Thank you,{" "}
+            <span className="font-semibold text-zinc-900">
+              {form.firstName}
+            </span>
+            ! We have confirmed your purchase of{" "}
+            <span className="font-semibold text-zinc-900">
+              {selectedPackage?.name}
+            </span>
+            .
           </p>
 
           <div className="mt-6 inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 font-mono text-xs text-zinc-700">
@@ -213,8 +228,10 @@ function PackagePurchaseContent() {
             <div>
               <p className="font-semibold">Confirmation Email Dispatched</p>
               <p className="mt-0.5 text-blue-800">
-                A formal receipt and lesson roadmap have been sent to <strong>{form.email}</strong>.
-                Our instructor will call your contact number (<strong>{form.phone}</strong>) within 24 hours to schedule your first lesson!
+                A formal receipt and lesson roadmap have been sent to{" "}
+                <strong>{form.email}</strong>. Our instructor will call your
+                contact number (<strong>{form.phone}</strong>) within 24 hours
+                to schedule your first lesson!
               </p>
             </div>
           </div>
@@ -223,15 +240,22 @@ function PackagePurchaseContent() {
           <div className="mt-8 rounded-2xl border border-zinc-100 bg-zinc-50 p-6 text-left space-y-3 text-xs text-zinc-700 max-w-lg mx-auto">
             <div className="flex justify-between border-b border-zinc-200/60 pb-2">
               <span className="text-zinc-500">Package</span>
-              <span className="font-bold text-zinc-900">{selectedPackage?.name}</span>
+              <span className="font-bold text-zinc-900">
+                {selectedPackage?.name}
+              </span>
             </div>
             <div className="flex justify-between border-b border-zinc-200/60 pb-2">
               <span className="text-zinc-500">Total Price</span>
-              <span className="font-extrabold text-zinc-950 text-sm">{selectedPackage?.price} CAD</span>
+              <span className="font-extrabold text-zinc-950 text-sm">
+                {selectedPackage?.price} CAD
+              </span>
             </div>
             <div className="flex justify-between border-b border-zinc-200/60 pb-2">
               <span className="text-zinc-500">Duration / Lessons</span>
-              <span className="font-medium">{selectedPackage?.duration} ({selectedPackage?.lessonsCount} Lessons)</span>
+              <span className="font-medium">
+                {selectedPackage?.duration} ({selectedPackage?.lessonsCount}{" "}
+                Lessons)
+              </span>
             </div>
             <div className="flex justify-between border-b border-zinc-200/60 pb-2">
               <span className="text-zinc-500">Pickup Location</span>
@@ -239,7 +263,9 @@ function PackagePurchaseContent() {
             </div>
             <div className="flex justify-between">
               <span className="text-zinc-500">Payment Status</span>
-              <span className="font-semibold text-emerald-700">Paid in Full</span>
+              <span className="font-semibold text-emerald-700">
+                Paid in Full
+              </span>
             </div>
           </div>
 
@@ -285,7 +311,10 @@ function PackagePurchaseContent() {
 
             {/* Package Selector */}
             <div className="mt-4">
-              <label htmlFor="packageSelect" className="block text-xs font-semibold text-zinc-700 mb-1">
+              <label
+                htmlFor="packageSelect"
+                className="block text-xs font-semibold text-zinc-700 mb-1"
+              >
                 Choose or Change Package:
               </label>
               <select
@@ -304,25 +333,32 @@ function PackagePurchaseContent() {
 
             {selectedPackage && (
               <div className="mt-5 border-t border-zinc-100 pt-5">
-                <h3 className="text-xl font-extrabold text-zinc-950">{selectedPackage.name}</h3>
+                <h3 className="text-xl font-extrabold text-zinc-950">
+                  {selectedPackage.name}
+                </h3>
                 <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-3xl font-extrabold text-zinc-950">{selectedPackage.price}</span>
-                  <span className="text-xs text-zinc-500 font-medium">CAD (Taxes included)</span>
+                  <span className="text-3xl font-extrabold text-zinc-950">
+                    {selectedPackage.price}
+                  </span>
+                  <span className="text-xs text-zinc-500 font-medium">
+                    CAD (Taxes included)
+                  </span>
                 </div>
                 <p className="mt-2 text-xs text-zinc-600 leading-relaxed">
                   {selectedPackage.description}
                 </p>
 
-                {selectedPackage.features && selectedPackage.features.length > 0 && (
-                  <ul className="mt-4 space-y-2 border-t border-zinc-100 pt-4 text-xs text-zinc-700">
-                    {selectedPackage.features.map((feat, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                        <span>{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                {selectedPackage.features &&
+                  selectedPackage.features.length > 0 && (
+                    <ul className="mt-4 space-y-2 border-t border-zinc-100 pt-4 text-xs text-zinc-700">
+                      {selectedPackage.features.map((feat, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
               </div>
             )}
           </div>
@@ -333,7 +369,8 @@ function PackagePurchaseContent() {
               <span>Four Seasons Guarantee</span>
             </div>
             <p>
-              Includes free door-to-door pickup across Surrey, Delta, and Langley. ICBC certified dual-brake vehicles provided.
+              Includes free door-to-door pickup across Surrey, Delta, and
+              Langley. certified dual-brake vehicles provided.
             </p>
           </div>
         </div>
@@ -349,7 +386,8 @@ function PackagePurchaseContent() {
                 Student &amp; Billing Information
               </h2>
               <p className="mt-1 text-xs text-zinc-500">
-                Please provide your contact details so we can email your purchase receipt and schedule your pickup.
+                Please provide your contact details so we can email your
+                purchase receipt and schedule your pickup.
               </p>
             </div>
 
@@ -371,7 +409,10 @@ function PackagePurchaseContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Email Address */}
                 <div>
-                  <label htmlFor="email" className="block text-xs font-bold text-zinc-950">
+                  <label
+                    htmlFor="email"
+                    className="block text-xs font-bold text-zinc-950"
+                  >
                     Email Address <span className="text-red-500">*</span>
                   </label>
                   <div className="relative mt-1">
@@ -390,14 +431,19 @@ function PackagePurchaseContent() {
                     />
                   </div>
                   <p className="mt-1 text-[11px] text-zinc-500">
-                    Your official purchase receipt and lesson confirmation will be sent here.
+                    Your official purchase receipt and lesson confirmation will
+                    be sent here.
                   </p>
                 </div>
 
                 {/* Contact Phone */}
                 <div>
-                  <label htmlFor="phone" className="block text-xs font-bold text-zinc-950">
-                    Phone / Contact Number <span className="text-red-500">*</span>
+                  <label
+                    htmlFor="phone"
+                    className="block text-xs font-bold text-zinc-950"
+                  >
+                    Phone / Contact Number{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="relative mt-1">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400">
@@ -424,7 +470,10 @@ function PackagePurchaseContent() {
             {/* BASIC DETAILS: Student Name */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="firstName" className="block text-xs font-semibold text-zinc-900">
+                <label
+                  htmlFor="firstName"
+                  className="block text-xs font-semibold text-zinc-900"
+                >
                   First Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -440,7 +489,10 @@ function PackagePurchaseContent() {
               </div>
 
               <div>
-                <label htmlFor="lastName" className="block text-xs font-semibold text-zinc-900">
+                <label
+                  htmlFor="lastName"
+                  className="block text-xs font-semibold text-zinc-900"
+                >
                   Last Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -459,7 +511,10 @@ function PackagePurchaseContent() {
             {/* Address & City for Doorstep Pickup */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="sm:col-span-2">
-                <label htmlFor="street" className="block text-xs font-semibold text-zinc-900">
+                <label
+                  htmlFor="street"
+                  className="block text-xs font-semibold text-zinc-900"
+                >
                   Street Address (Pickup Location)
                 </label>
                 <input
@@ -474,7 +529,10 @@ function PackagePurchaseContent() {
               </div>
 
               <div>
-                <label htmlFor="city" className="block text-xs font-semibold text-zinc-900">
+                <label
+                  htmlFor="city"
+                  className="block text-xs font-semibold text-zinc-900"
+                >
                   City
                 </label>
                 <select
@@ -496,7 +554,10 @@ function PackagePurchaseContent() {
             {/* License details */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="licenseClass" className="block text-xs font-semibold text-zinc-900">
+                <label
+                  htmlFor="licenseClass"
+                  className="block text-xs font-semibold text-zinc-900"
+                >
                   Current License Class
                 </label>
                 <select
@@ -513,7 +574,10 @@ function PackagePurchaseContent() {
               </div>
 
               <div>
-                <label htmlFor="licenseNumber" className="block text-xs font-semibold text-zinc-900">
+                <label
+                  htmlFor="licenseNumber"
+                  className="block text-xs font-semibold text-zinc-900"
+                >
                   BC Driver&apos;s License # (Optional)
                 </label>
                 <input
@@ -545,7 +609,9 @@ function PackagePurchaseContent() {
                     <CreditCard className="h-4 w-4 text-emerald-400" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-zinc-950">Credit or Debit Card</p>
+                    <p className="text-xs font-bold text-zinc-950">
+                      Credit or Debit Card
+                    </p>
                     <p className="text-[11px] text-zinc-500">
                       Visa, Mastercard, AMEX, Apple Pay, Google Pay
                     </p>
@@ -555,7 +621,9 @@ function PackagePurchaseContent() {
                 <div className="border-t border-emerald-200/60 pt-2 text-[11px] text-zinc-600 flex items-start gap-2">
                   <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
                   <span>
-                    Package payments are securely processed online via Stripe Elements. Cash on arrival is not available for package bundles.
+                    Package payments are securely processed online via Stripe
+                    Elements. Cash on arrival is not available for package
+                    bundles.
                   </span>
                 </div>
               </div>
@@ -600,7 +668,9 @@ export default function PackagePurchasePage() {
           fallback={
             <div className="flex flex-col items-center justify-center py-24 text-zinc-400">
               <Loader2 className="h-8 w-8 animate-spin" />
-              <p className="mt-2 text-xs font-medium">Loading package checkout...</p>
+              <p className="mt-2 text-xs font-medium">
+                Loading package checkout...
+              </p>
             </div>
           }
         >

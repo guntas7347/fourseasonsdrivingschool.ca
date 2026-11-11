@@ -43,7 +43,7 @@ const DEFAULT_GALLERY_FORM: GalleryFormFields = {
   title: "",
   category: "Student Passes",
   studentName: "",
-  location: "Surrey 152nd St ICBC",
+  location: "Surrey 152nd St  ",
   description: "",
   featured: false,
 };
@@ -383,7 +383,9 @@ export default function AdminGalleryPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDelete(img.id, img.title, img.publicId)}
+                    onClick={() =>
+                      handleDelete(img.id, img.title, img.publicId)
+                    }
                     disabled={deletingId === img.id}
                     className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition"
                     title="Delete Image"
@@ -505,7 +507,7 @@ export default function AdminGalleryPage() {
                     required
                     value={form.title}
                     onChange={handleChange}
-                    placeholder="e.g. Gurpreet passing Class 5 on first attempt at Surrey 152nd ICBC"
+                    placeholder="e.g. Gurpreet passing Class 5 on first attempt at Surrey 152nd  "
                     className="mt-1 block w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-xs text-zinc-900 focus:border-zinc-900 focus:outline-none"
                   />
                 </div>
@@ -559,7 +561,7 @@ export default function AdminGalleryPage() {
                     htmlFor="location"
                     className="block text-xs font-semibold text-zinc-700"
                   >
-                    Location / ICBC Test Centre
+                    Location / Test Centre
                   </label>
                   <input
                     type="text"
@@ -567,7 +569,7 @@ export default function AdminGalleryPage() {
                     name="location"
                     value={form.location}
                     onChange={handleChange}
-                    placeholder="e.g. Surrey 152nd St ICBC / Langley ICBC"
+                    placeholder="e.g. Surrey 152nd St   / Langley  "
                     className="mt-1 block w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-xs text-zinc-900 focus:border-zinc-900 focus:outline-none"
                   />
                 </div>

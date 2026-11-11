@@ -9,7 +9,7 @@ export default function HeroTypeAnimation() {
       sequence={[
         "First-Time Road Test Success.",
         2500,
-        "ICBC Class 5 & 7N Mastery.",
+        "  Class 5 & 7N Mastery.",
         2500,
         "Dual-Brake Safety Confidence.",
         2500,

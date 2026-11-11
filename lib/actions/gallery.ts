@@ -29,7 +29,7 @@ const DEFAULT_GALLERY_IMAGES: Omit<GalleryItem, "id" | "createdAt">[] = [
     title: "Class 5 First-Attempt Road Test Pass!",
     category: "Student Passes",
     studentName: "Gurpreet S.",
-    location: "Surrey 152nd St ICBC",
+    location: "Surrey 152nd St  ",
     description:
       "Congratulations Gurpreet on clearing your Class 5 test on the first attempt with zero driving errors!",
     featured: true,
@@ -48,7 +48,7 @@ const DEFAULT_GALLERY_IMAGES: Omit<GalleryItem, "id" | "createdAt">[] = [
     title: "Class 7N Road Test Success!",
     category: "Student Passes",
     studentName: "Jessica M.",
-    location: "Langley ICBC Test Centre",
+    location: "Langley   Test Centre",
     description:
       "Proud moment as Jessica successfully passed her 'N' driving test after our 5-lesson confidence package.",
     featured: true,
@@ -76,9 +76,9 @@ const DEFAULT_GALLERY_IMAGES: Omit<GalleryItem, "id" | "createdAt">[] = [
     title: "First-Time Driver License Celebration",
     category: "Student Passes",
     studentName: "Amanpreet K.",
-    location: "Surrey ICBC Driver Licensing",
+    location: "Surrey   Driver Licensing",
     description:
-      "Amanpreet with her official passing report from ICBC examiner after mastering reverse stall parking.",
+      "Amanpreet with her official passing report from   examiner after mastering reverse stall parking.",
     featured: true,
   },
   {
@@ -87,7 +87,7 @@ const DEFAULT_GALLERY_IMAGES: Omit<GalleryItem, "id" | "createdAt">[] = [
     category: "Lessons & Road Tests",
     location: "Delta / Surrey Boundary",
     description:
-      "Teaching students the essential ICBC pre-trip safety inspection, tire checks, and signal verifications.",
+      "Teaching students the essential   pre-trip safety inspection, tire checks, and signal verifications.",
     featured: false,
   },
   {
@@ -95,7 +95,7 @@ const DEFAULT_GALLERY_IMAGES: Omit<GalleryItem, "id" | "createdAt">[] = [
     title: "New Driver Class 7 Pass!",
     category: "Student Passes",
     studentName: "Navneet S.",
-    location: "Newton ICBC Centre",
+    location: "Newton   Centre",
     description:
       "Smiles all around after a flawless road test in Newton. Ready for safe independent driving!",
     featured: false,

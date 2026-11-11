@@ -12,7 +12,14 @@ interface StatItemProps {
   icon: React.ReactNode;
 }
 
-function StatCard({ label, sublabel, value, suffix = "", prefix = "", icon }: StatItemProps) {
+function StatCard({
+  label,
+  sublabel,
+  value,
+  suffix = "",
+  prefix = "",
+  icon,
+}: StatItemProps) {
   const [count, setCount] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -27,7 +34,7 @@ function StatCard({ label, sublabel, value, suffix = "", prefix = "", icon }: St
           setHasStarted(true);
         }
       },
-      { threshold: 0.2 }
+      { threshold: 0.2 },
     );
 
     observer.observe(node);
@@ -75,11 +82,17 @@ function StatCard({ label, sublabel, value, suffix = "", prefix = "", icon }: St
 
       <div className="mt-4">
         <div className="flex items-baseline gap-0.5">
-          {prefix && <span className="text-2xl font-black text-zinc-950">{prefix}</span>}
+          {prefix && (
+            <span className="text-2xl font-black text-zinc-950">{prefix}</span>
+          )}
           <span className="text-3xl sm:text-4xl font-extrabold tracking-tight text-zinc-950">
             {count.toLocaleString()}
           </span>
-          {suffix && <span className="text-2xl sm:text-3xl font-extrabold text-emerald-600">{suffix}</span>}
+          {suffix && (
+            <span className="text-2xl sm:text-3xl font-extrabold text-emerald-600">
+              {suffix}
+            </span>
+          )}
         </div>
         <p className="mt-1 text-xs font-bold text-zinc-900">{label}</p>
         <p className="text-[11px] text-zinc-500">{sublabel}</p>
@@ -98,7 +111,7 @@ export default function AnimatedStatsCounter() {
         value={98}
         suffix="%"
         label="First-Time Pass Rate"
-        sublabel="At Surrey & Langley ICBC"
+        sublabel="At Surrey & Langley  "
         icon={<Award className="h-5 w-5 text-emerald-600" />}
       />
       <StatCard

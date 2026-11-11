@@ -134,18 +134,24 @@ export default function RegistrationForm() {
 
     // Validation checks
     if (!form.firstName || !form.lastName || !form.email || !form.phone) {
-      setValidationError("Please fill out your contact details (Name, Email, Phone).");
+      setValidationError(
+        "Please fill out your contact details (Name, Email, Phone).",
+      );
       return;
     }
 
     if (!form.street || !form.city) {
-      setValidationError("Please enter your street address and city for lesson pickup.");
+      setValidationError(
+        "Please enter your street address and city for lesson pickup.",
+      );
       return;
     }
 
     if (!form.selectedSlot) {
       setSlotError(true);
-      setValidationError("Please select an available lesson appointment slot from the calendar.");
+      setValidationError(
+        "Please select an available lesson appointment slot from the calendar.",
+      );
       const calendarEl = document.getElementById("calendar-section");
       if (calendarEl) {
         calendarEl.scrollIntoView({ behavior: "smooth" });
@@ -160,9 +166,11 @@ export default function RegistrationForm() {
 
     const draftPayload: BookingFormData = {
       ...form,
-      slotTypeName: selectedType?.name || form.slotTypeName || "Standard 90-Min Lesson",
+      slotTypeName:
+        selectedType?.name || form.slotTypeName || "Standard 90-Min Lesson",
       slotTypePrice: selectedType?.price || form.slotTypePrice || "$110",
-      packageName: selectedType?.name || form.slotTypeName || "Standard 90-Min Lesson",
+      packageName:
+        selectedType?.name || form.slotTypeName || "Standard 90-Min Lesson",
       packagePrice: selectedType?.price || form.slotTypePrice || "$110",
     };
 
@@ -172,7 +180,10 @@ export default function RegistrationForm() {
     console.log("==================================================");
 
     if (typeof window !== "undefined") {
-      sessionStorage.setItem("fourseasons_booking_draft", JSON.stringify(draftPayload));
+      sessionStorage.setItem(
+        "fourseasons_booking_draft",
+        JSON.stringify(draftPayload),
+      );
     }
 
     // Navigate to /bookings to continue and complete payment
@@ -192,7 +203,8 @@ export default function RegistrationForm() {
             Online Registration &amp; Appointment Booking
           </h2>
           <p className="mt-3 text-base text-zinc-600 max-w-2xl mx-auto">
-            Choose an available date &amp; time slot directly on the calendar below, then proceed to finalize your lesson details.
+            Choose an available date &amp; time slot directly on the calendar
+            below, then proceed to finalize your lesson details.
           </p>
         </div>
 
@@ -219,7 +231,10 @@ export default function RegistrationForm() {
 
               <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-zinc-700">
+                  <label
+                    htmlFor="firstName"
+                    className="block text-sm font-medium text-zinc-700"
+                  >
                     First Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -236,7 +251,10 @@ export default function RegistrationForm() {
                 </div>
 
                 <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-zinc-700">
+                  <label
+                    htmlFor="lastName"
+                    className="block text-sm font-medium text-zinc-700"
+                  >
                     Last Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -253,7 +271,10 @@ export default function RegistrationForm() {
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-zinc-700">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-zinc-700"
+                  >
                     Email Address <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -270,7 +291,10 @@ export default function RegistrationForm() {
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-zinc-700">
+                  <label
+                    htmlFor="phone"
+                    className="block text-sm font-medium text-zinc-700"
+                  >
                     Phone No <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -301,7 +325,10 @@ export default function RegistrationForm() {
 
               <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-6">
                 <div className="sm:col-span-3">
-                  <label htmlFor="street" className="block text-sm font-medium text-zinc-700">
+                  <label
+                    htmlFor="street"
+                    className="block text-sm font-medium text-zinc-700"
+                  >
                     Street Address <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -318,7 +345,10 @@ export default function RegistrationForm() {
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label htmlFor="city" className="block text-sm font-medium text-zinc-700">
+                  <label
+                    htmlFor="city"
+                    className="block text-sm font-medium text-zinc-700"
+                  >
                     City <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -335,7 +365,10 @@ export default function RegistrationForm() {
                 </div>
 
                 <div className="sm:col-span-1">
-                  <label htmlFor="postCode" className="block text-sm font-medium text-zinc-700">
+                  <label
+                    htmlFor="postCode"
+                    className="block text-sm font-medium text-zinc-700"
+                  >
                     Post Code
                   </label>
                   <input
@@ -359,13 +392,16 @@ export default function RegistrationForm() {
                   <FileText className="h-4 w-4" />
                 </div>
                 <h3 className="text-base font-semibold text-zinc-900">
-                  3. ICBC Driver&apos;s License Information
+                  3. Driver&apos;s License Information
                 </h3>
               </div>
 
               <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="licenseNumber" className="block text-sm font-medium text-zinc-700">
+                  <label
+                    htmlFor="licenseNumber"
+                    className="block text-sm font-medium text-zinc-700"
+                  >
                     Driving License No (LDL#)
                   </label>
                   <input
@@ -378,13 +414,17 @@ export default function RegistrationForm() {
                     className="mt-1.5 block w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 transition"
                   />
                   <p className="mt-1 text-xs text-zinc-400">
-                    7-digit number on your ICBC card or paper learner permit.
+                    7-digit number on your card or paper learner permit.
                   </p>
                 </div>
 
                 <div>
-                  <label htmlFor="licenseClass" className="block text-sm font-medium text-zinc-700">
-                    Driving License Class <span className="text-red-500">*</span>
+                  <label
+                    htmlFor="licenseClass"
+                    className="block text-sm font-medium text-zinc-700"
+                  >
+                    Driving License Class{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <select
                     id="licenseClass"
@@ -394,9 +434,13 @@ export default function RegistrationForm() {
                     onChange={handleChange}
                     className="mt-1.5 block w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 transition"
                   >
-                    <option value="Class 7L">Class 7L (Learner&apos;s License)</option>
+                    <option value="Class 7L">
+                      Class 7L (Learner&apos;s License)
+                    </option>
                     <option value="Class 7N">Class 7N (Novice License)</option>
-                    <option value="Class 5">Class 5 (Full License / Refresher)</option>
+                    <option value="Class 5">
+                      Class 5 (Full License / Refresher)
+                    </option>
                     <option value="International / Other">
                       Out of Province / International License
                     </option>
@@ -419,7 +463,10 @@ export default function RegistrationForm() {
               <div className="mt-5">
                 {/* Slot Type Selector */}
                 <div>
-                  <label htmlFor="slotTypeId" className="block text-sm font-medium text-zinc-700">
+                  <label
+                    htmlFor="slotTypeId"
+                    className="block text-sm font-medium text-zinc-700"
+                  >
                     Lesson / Slot Type <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -436,7 +483,8 @@ export default function RegistrationForm() {
                     ))}
                   </select>
                   <p className="mt-1 text-xs text-zinc-400">
-                    Price and duration for your selected individual appointment slot.
+                    Price and duration for your selected individual appointment
+                    slot.
                   </p>
                 </div>
               </div>
@@ -457,7 +505,8 @@ export default function RegistrationForm() {
                 <div className="mb-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-800">
                   <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
                   <span>
-                    Please select an available lesson appointment slot from the calendar below to proceed.
+                    Please select an available lesson appointment slot from the
+                    calendar below to proceed.
                   </span>
                 </div>
               )}
@@ -479,11 +528,16 @@ export default function RegistrationForm() {
                     <span className="text-emerald-700 font-medium flex items-center gap-1.5">
                       <CheckCircle2 className="h-4 w-4 shrink-0" />
                       <span>
-                        Slot selected: {form.startDate} at {form.selectedSlot.time}. Click proceed to finalize payment and schedule.
+                        Slot selected: {form.startDate} at{" "}
+                        {form.selectedSlot.time}. Click proceed to finalize
+                        payment and schedule.
                       </span>
                     </span>
                   ) : (
-                    <span>Please select a date and an available slot above to proceed.</span>
+                    <span>
+                      Please select a date and an available slot above to
+                      proceed.
+                    </span>
                   )}
                 </div>
 

@@ -30,7 +30,9 @@ export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<BookingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "Online" | "Manual">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "Online" | "Manual">(
+    "all",
+  );
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
@@ -92,7 +94,10 @@ export default function AdminBookingsPage() {
   const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
   const pageSafe = Math.min(currentPage, totalPages);
   const startIndex = (pageSafe - 1) * PAGE_SIZE;
-  const currentItems = filteredBookings.slice(startIndex, startIndex + PAGE_SIZE);
+  const currentItems = filteredBookings.slice(
+    startIndex,
+    startIndex + PAGE_SIZE,
+  );
 
   // Export current page table data to CSV
   const handleExportCsv = () => {
@@ -135,7 +140,7 @@ export default function AdminBookingsPage() {
       b.packagePrice || "N/A",
       b.bookedRoadTest === "yes" ? "Yes" : "No",
       b.bookedRoadTest === "yes"
-        ? `${b.roadTestDate || "Date TBD"} at ${b.roadTestLocation || "Local ICBC"}`
+        ? `${b.roadTestDate || "Date TBD"} at ${b.roadTestLocation || "Local  "}`
         : "",
       b.additionalNotes || "",
     ]);
@@ -152,7 +157,8 @@ export default function AdminBookingsPage() {
             Student Bookings
           </h1>
           <p className="mt-1 text-sm text-zinc-500">
-            Verified reservations categorized into Online (Stripe payment completed) and Manual (booked via admin).
+            Verified reservations categorized into Online (Stripe payment
+            completed) and Manual (booked via admin).
           </p>
         </div>
 
@@ -190,7 +196,9 @@ export default function AdminBookingsPage() {
             <span>All Bookings</span>
             <span
               className={`rounded-full px-2 py-0.5 text-[10px] font-mono ${
-                statusFilter === "all" ? "bg-zinc-800 text-zinc-200" : "bg-zinc-100 text-zinc-700"
+                statusFilter === "all"
+                  ? "bg-zinc-800 text-zinc-200"
+                  : "bg-zinc-100 text-zinc-700"
               }`}
             >
               {bookings.length}
@@ -265,7 +273,9 @@ export default function AdminBookingsPage() {
           </div>
 
           <div className="text-xs text-zinc-500 font-medium">
-            Showing <strong>{currentItems.length}</strong> of <strong>{totalItems}</strong> bookings (Page {pageSafe} of {totalPages})
+            Showing <strong>{currentItems.length}</strong> of{" "}
+            <strong>{totalItems}</strong> bookings (Page {pageSafe} of{" "}
+            {totalPages})
           </div>
         </div>
       </div>
@@ -274,20 +284,24 @@ export default function AdminBookingsPage() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-24 text-zinc-400">
           <Loader2 className="h-8 w-8 animate-spin text-zinc-800" />
-          <p className="mt-3 text-xs font-semibold">Loading student bookings...</p>
+          <p className="mt-3 text-xs font-semibold">
+            Loading student bookings...
+          </p>
         </div>
       ) : totalItems === 0 ? (
         <div className="rounded-2xl border border-zinc-200 bg-white p-12 text-center">
           <BookOpen className="mx-auto h-12 w-12 text-zinc-300" />
-          <h3 className="mt-3 text-base font-bold text-zinc-900">No Bookings Found</h3>
+          <h3 className="mt-3 text-base font-bold text-zinc-900">
+            No Bookings Found
+          </h3>
           <p className="mt-1 text-xs text-zinc-500 max-w-sm mx-auto">
             {searchQuery
               ? "No student bookings match your search query."
               : statusFilter === "Online"
-              ? "No online student bookings completed via Stripe yet."
-              : statusFilter === "Manual"
-              ? "No manual bookings recorded via admin yet."
-              : "No valid student bookings found."}
+                ? "No online student bookings completed via Stripe yet."
+                : statusFilter === "Manual"
+                  ? "No manual bookings recorded via admin yet."
+                  : "No valid student bookings found."}
           </p>
         </div>
       ) : (
@@ -309,12 +323,17 @@ export default function AdminBookingsPage() {
                   const isOnline = booking.status === "Online";
 
                   return (
-                    <tr key={booking.id} className="hover:bg-zinc-50/80 transition-colors">
+                    <tr
+                      key={booking.id}
+                      className="hover:bg-zinc-50/80 transition-colors"
+                    >
                       {/* Student Info */}
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-white font-bold text-xs">
-                            {booking.firstName?.[0] || booking.lastName?.[0] || "S"}
+                            {booking.firstName?.[0] ||
+                              booking.lastName?.[0] ||
+                              "S"}
                           </div>
                           <div>
                             <p className="font-bold text-zinc-950 text-sm">
@@ -409,7 +428,9 @@ export default function AdminBookingsPage() {
                                   className="inline-flex items-center gap-1 text-[10px] font-mono font-medium text-zinc-600 hover:text-emerald-700 bg-zinc-100 hover:bg-emerald-50 px-2 py-0.5 rounded border border-zinc-200 transition"
                                 >
                                   <CreditCard className="h-3 w-3 text-emerald-600 shrink-0" />
-                                  <span className="truncate max-w-[130px]">{booking.paymentIntentId}</span>
+                                  <span className="truncate max-w-[130px]">
+                                    {booking.paymentIntentId}
+                                  </span>
                                 </Link>
                               </div>
                             ) : (
@@ -430,7 +451,9 @@ export default function AdminBookingsPage() {
                             <p className="text-[10px] text-zinc-500 font-medium flex items-center gap-1">
                               <span>Booked via Admin</span>
                               {booking.paymentMethod === "Cash on spot" && (
-                                <span className="text-zinc-400 font-normal">&bull; Cash</span>
+                                <span className="text-zinc-400 font-normal">
+                                  &bull; Cash
+                                </span>
                               )}
                             </p>
                           </div>
@@ -462,7 +485,9 @@ export default function AdminBookingsPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
                   disabled={pageSafe >= totalPages}
                   className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-40 transition cursor-pointer"
                 >

@@ -115,12 +115,30 @@ export async function getAvailableSlotDatesAction(): Promise<string[]> {
  * Useful for client-side and server-side conflict detection.
  */
 export async function getExistingSlotsForDatesAction(
-  dates: string[]
-): Promise<Array<{ id: string; date: string; startTime: string; endTime: string; time: string; instructor?: string; status: string }>> {
+  dates: string[],
+): Promise<
+  Array<{
+    id: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    time: string;
+    instructor?: string;
+    status: string;
+  }>
+> {
   try {
     if (!dates || dates.length === 0) return [];
     const uniqueDates = Array.from(new Set(dates));
-    const results: Array<{ id: string; date: string; startTime: string; endTime: string; time: string; instructor?: string; status: string }> = [];
+    const results: Array<{
+      id: string;
+      date: string;
+      startTime: string;
+      endTime: string;
+      time: string;
+      instructor?: string;
+      status: string;
+    }> = [];
 
     for (const d of uniqueDates) {
       const snap = await db.collection("slots").where("date", "==", d).get();
@@ -245,7 +263,10 @@ export async function createBatchSlotsAction(
         if (a.date === b.date) {
           const aInst = (a.instructor || "").toLowerCase().trim();
           const bInst = (b.instructor || "").toLowerCase().trim();
-          if (hasInstructorConflict(a.instructor, b.instructor) && doSlotsOverlap(a, b)) {
+          if (
+            hasInstructorConflict(a.instructor, b.instructor) &&
+            doSlotsOverlap(a, b)
+          ) {
             return {
               success: false,
               count: 0,
@@ -260,7 +281,12 @@ export async function createBatchSlotsAction(
     const uniqueDates = Array.from(new Set(slots.map((s) => s.date)));
     const existingSlotsByDate: Record<
       string,
-      Array<{ startTime: string; endTime: string; time?: string; instructor?: string }>
+      Array<{
+        startTime: string;
+        endTime: string;
+        time?: string;
+        instructor?: string;
+      }>
     > = {};
 
     for (const d of uniqueDates) {
@@ -285,7 +311,10 @@ export async function createBatchSlotsAction(
     for (const newSlot of slots) {
       const existingList = existingSlotsByDate[newSlot.date] || [];
       for (const ex of existingList) {
-        if (hasInstructorConflict(newSlot.instructor, ex.instructor) && doSlotsOverlap(newSlot, ex)) {
+        if (
+          hasInstructorConflict(newSlot.instructor, ex.instructor) &&
+          doSlotsOverlap(newSlot, ex)
+        ) {
           return {
             success: false,
             count: 0,
@@ -634,7 +663,7 @@ export async function deleteBatchSlotsAction(slotIds: string[]): Promise<{
     for (let i = 0; i < uniqueIds.length; i += chunkSize) {
       const chunk = uniqueIds.slice(i, i + chunkSize);
       const docs = await Promise.all(
-        chunk.map((id) => db.collection("slots").doc(id).get())
+        chunk.map((id) => db.collection("slots").doc(id).get()),
       );
 
       for (const doc of docs) {
@@ -663,7 +692,12 @@ export async function deleteBatchSlotsAction(slotIds: string[]): Promise<{
       }
     }
 
-    await revalidatePaths(["/", "/bookings", "/admin/slots", "/admin/bookings"]);
+    await revalidatePaths([
+      "/",
+      "/bookings",
+      "/admin/slots",
+      "/admin/bookings",
+    ]);
     return { success: true, deletedCount, skippedBookedCount };
   } catch (error: any) {
     console.error("deleteBatchSlotsAction error:", error);
@@ -684,7 +718,7 @@ const DEFAULT_SLOT_TYPES: Omit<SlotTypeItem, "id">[] = [
     numericPrice: 110,
   },
   {
-    name: "Mock ICBC Road Test (90 min)",
+    name: "Mock   Road Test (90 min)",
     price: "$125",
     numericPrice: 125,
   },

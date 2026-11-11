@@ -283,7 +283,7 @@ async function CheckoutDetails({
               <span>${numericPrice.toFixed(2)} CAD</span>
             </div>
             <div className="flex items-center justify-between text-zinc-600">
-              <span>Certified ICBC Instructor</span>
+              <span>Certified Instructor</span>
               <span className="text-emerald-700 font-medium">Included</span>
             </div>
             <div className="flex items-baseline justify-between border-t border-zinc-200 pt-3 text-sm font-bold text-zinc-950">

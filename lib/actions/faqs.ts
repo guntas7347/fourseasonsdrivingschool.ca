@@ -17,12 +17,12 @@ const DEFAULT_FAQS: Omit<FaqItem, "id">[] = [
   {
     question: "What do I need to bring for my first driving lesson?",
     answer:
-      "You must have your valid ICBC Driver's License (Class 7L, Class 7N, or Class 5) with you during every lesson. Wear comfortable closed-toe footwear and corrective glasses or contacts if required on your license.",
+      "You must have your valid   Driver's License (Class 7L, Class 7N, or Class 5) with you during every lesson. Wear comfortable closed-toe footwear and corrective glasses or contacts if required on your license.",
     order: 1,
     category: "General",
   },
   {
-    question: "Do you provide car rental for the ICBC road test?",
+    question: "Do you provide car rental for the   road test?",
     answer:
       "Yes, our certified dual-brake vehicles are available for your road test. Our package includes a 45-minute warm-up drive right before your test appointment to get your nerves settled.",
     order: 2,
@@ -43,9 +43,10 @@ const DEFAULT_FAQS: Omit<FaqItem, "id">[] = [
     category: "Booking",
   },
   {
-    question: "How many lessons do I need before taking the Class 7 or Class 5 test?",
+    question:
+      "How many lessons do I need before taking the Class 7 or Class 5 test?",
     answer:
-      "This depends on your prior experience. Beginners usually take between 8 to 12 lessons to master defensive driving and ICBC road test maneuvers, whereas experienced drivers taking Class 5 often need 2 to 4 brush-up sessions.",
+      "This depends on your prior experience. Beginners usually take between 8 to 12 lessons to master defensive driving and   road test maneuvers, whereas experienced drivers taking Class 5 often need 2 to 4 brush-up sessions.",
     order: 5,
     category: "Training",
   },
@@ -124,7 +125,7 @@ export async function getFaqsAction(): Promise<FaqItem[]> {
  * Create a new FAQ entry with a real Firebase doc.id
  */
 export async function createFaqAction(
-  data: Omit<FaqItem, "id" | "createdAt" | "updatedAt">
+  data: Omit<FaqItem, "id" | "createdAt" | "updatedAt">,
 ): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
     const docRef = db.collection("faqs").doc();
@@ -151,7 +152,7 @@ export async function createFaqAction(
  */
 export async function updateFaqAction(
   id: string,
-  data: Partial<Omit<FaqItem, "id">>
+  data: Partial<Omit<FaqItem, "id">>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     if (!id) throw new Error("Missing FAQ doc.id");
@@ -173,7 +174,9 @@ export async function updateFaqAction(
 /**
  * Delete an FAQ by its Firebase doc.id
  */
-export async function deleteFaqAction(id: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteFaqAction(
+  id: string,
+): Promise<{ success: boolean; error?: string }> {
   try {
     if (!id) throw new Error("Missing FAQ doc.id");
     await db.collection("faqs").doc(id).delete();

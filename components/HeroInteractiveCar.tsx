@@ -61,7 +61,7 @@ export default function HeroInteractiveCar() {
               Dual-Control Training Simulator
             </span>
             <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-200">
-              ICBC Certified Fleet
+                Certified Fleet
             </span>
           </div> */}
 
@@ -125,7 +125,7 @@ export default function HeroInteractiveCar() {
               <p className="font-bold text-zinc-900 leading-tight">
                 Surrey 152nd St
               </p>
-              <p className="text-[10px] text-zinc-500">ICBC Mock Routes</p>
+              <p className="text-[10px] text-zinc-500"> Mock Routes</p>
             </div>
           </div>
 
@@ -494,9 +494,7 @@ export default function HeroInteractiveCar() {
               <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
               <span>98% Pass Rate</span>
             </p>
-            <p className="text-[10px] text-zinc-500 mt-0.5">
-              First attempt at ICBC
-            </p>
+            <p className="text-[10px] text-zinc-500 mt-0.5">First attempt at</p>
           </div>
 
           <div className="rounded-xl bg-white/70 p-2.5 border border-zinc-100">
@@ -512,7 +510,7 @@ export default function HeroInteractiveCar() {
           <div className="rounded-xl bg-white/70 p-2.5 border border-zinc-100">
             <p className="text-xs font-bold text-zinc-950 flex items-center justify-center gap-1">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-              <span>ICBC Licensed</span>
+              <span> Licensed</span>
             </p>
             <p className="text-[10px] text-zinc-500 mt-0.5">
               BC Motor Vehicle Act

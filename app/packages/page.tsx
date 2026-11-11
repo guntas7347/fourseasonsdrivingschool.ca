@@ -4,12 +4,20 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PackageCard from "@/components/PackageCard";
 import { getPackagesAction } from "@/lib/actions/packages";
-import { ShieldCheck, Award, CalendarCheck, PhoneCall, CheckCircle, Loader2 } from "lucide-react";
+import {
+  ShieldCheck,
+  Award,
+  CalendarCheck,
+  PhoneCall,
+  CheckCircle,
+  Loader2,
+} from "lucide-react";
 
 export const metadata = {
-  title: "Driving Lesson Packages & Pricing | Four Seasons Driving School Surrey",
+  title:
+    "Driving Lesson Packages & Pricing | Four Seasons Driving School Surrey",
   description:
-    "Explore our complete range of ICBC-certified driving packages in Surrey, Delta, and Langley. Single lessons, 5-lesson, 10-lesson packages, and road test car rentals.",
+    "Explore our complete range of  -certified driving packages in Surrey, Delta, and Langley. Single lessons, 5-lesson, 10-lesson packages, and road test car rentals.",
 };
 
 async function AllPackagesGrid() {
@@ -36,14 +44,17 @@ export default function PackagesPage() {
             <div className="mx-auto max-w-3xl text-center">
               <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-1.5 text-xs font-semibold text-zinc-800 shadow-xs">
                 <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>ICBC Licensed Driving School Packages</span>
+                <span> Licensed Driving School Packages</span>
               </div>
 
               <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-zinc-950 sm:text-5xl">
                 All Driving Lesson Packages &amp; Pricing
               </h1>
               <p className="mt-4 text-base sm:text-lg leading-relaxed text-zinc-600">
-                Choose the training package that fits your experience level and goals. All packages include one-on-one professional coaching in dual-brake safety vehicles and free doorstep pickup across Surrey, Delta, and Langley.
+                Choose the training package that fits your experience level and
+                goals. All packages include one-on-one professional coaching in
+                dual-brake safety vehicles and free doorstep pickup across
+                Surrey, Delta, and Langley.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-xs font-medium text-zinc-600">
@@ -71,7 +82,9 @@ export default function PackagesPage() {
               fallback={
                 <div className="flex flex-col items-center justify-center py-24 text-zinc-400">
                   <Loader2 className="h-8 w-8 animate-spin" />
-                  <p className="mt-3 text-xs font-semibold">Loading live packages...</p>
+                  <p className="mt-3 text-xs font-semibold">
+                    Loading live packages...
+                  </p>
                 </div>
               }
             >
@@ -85,7 +98,9 @@ export default function PackagesPage() {
                   Not sure which package is right for you?
                 </h3>
                 <p className="mt-2 text-sm text-zinc-600">
-                  Speak with our certified instructors. We will evaluate your current driving experience and recommend the most cost-effective path to passing your ICBC road test.
+                  Speak with our certified instructors. We will evaluate your
+                  current driving experience and recommend the most
+                  cost-effective path to passing your road test.
                 </p>
               </div>
 

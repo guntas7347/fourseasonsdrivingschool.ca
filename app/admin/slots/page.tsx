@@ -160,16 +160,20 @@ export default function AdminSlotsPage() {
   const handleDeleteSlot = async (slot: SlotItem) => {
     if (slot.status === "booked") {
       alert(
-        "Cannot delete a booked slot directly. Please open 'Manage Slot' to release / free it first."
+        "Cannot delete a booked slot directly. Please open 'Manage Slot' to release / free it first.",
       );
       setManagingSlot(slot);
       setManageError(
-        "Direct deletion is blocked because this slot is booked. Click 'Free Slot' below to initiate the refund and restore it to available status."
+        "Direct deletion is blocked because this slot is booked. Click 'Free Slot' below to initiate the refund and restore it to available status.",
       );
       return;
     }
 
-    if (!confirm(`Are you sure you want to delete slot: ${slot.date} ${slot.time}?`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete slot: ${slot.date} ${slot.time}?`,
+      )
+    ) {
       return;
     }
 
@@ -208,7 +212,10 @@ export default function AdminSlotsPage() {
         for (let j = i + 1; j < daySlots.length; j++) {
           const a = daySlots[i];
           const b = daySlots[j];
-          if (hasInstructorConflict(a.instructor, b.instructor) && doSlotsOverlap(a, b)) {
+          if (
+            hasInstructorConflict(a.instructor, b.instructor) &&
+            doSlotsOverlap(a, b)
+          ) {
             conflictIds.add(a.id);
             conflictIds.add(b.id);
           }
@@ -228,7 +235,9 @@ export default function AdminSlotsPage() {
   const handleToggleSelect = (slotId: string, isBooked: boolean) => {
     if (isBooked) return;
     setSelectedSlotIds((prev) =>
-      prev.includes(slotId) ? prev.filter((id) => id !== slotId) : [...prev, slotId]
+      prev.includes(slotId)
+        ? prev.filter((id) => id !== slotId)
+        : [...prev, slotId],
     );
   };
 
@@ -270,7 +279,7 @@ export default function AdminSlotsPage() {
       } catch (actionErr: any) {
         console.warn(
           "deleteBatchSlotsAction failed, falling back to deleteSlotAction:",
-          actionErr
+          actionErr,
         );
         // Fallback: delete slots one by one safely skipping booked slots
         let deletedCount = 0;
@@ -307,7 +316,8 @@ export default function AdminSlotsPage() {
     } catch (err: any) {
       console.error("Bulk delete error:", err);
       setBulkDeleteResult({
-        message: err?.message || "An unexpected error occurred during bulk deletion.",
+        message:
+          err?.message || "An unexpected error occurred during bulk deletion.",
         type: "error",
       });
     } finally {
@@ -337,7 +347,7 @@ export default function AdminSlotsPage() {
       const res = await freeSlotAction(managingSlot.id);
       if (res.success) {
         setManageSuccess(
-          "Slot freed successfully! Mock Stripe refund processed. The slot is now available to be booked again or deleted."
+          "Slot freed successfully! Mock Stripe refund processed. The slot is now available to be booked again or deleted.",
         );
         const updatedSlot: SlotItem = {
           ...managingSlot,
@@ -347,7 +357,7 @@ export default function AdminSlotsPage() {
         };
         setManagingSlot(updatedSlot);
         setSlots((prev) =>
-          prev.map((s) => (s.id === managingSlot.id ? updatedSlot : s))
+          prev.map((s) => (s.id === managingSlot.id ? updatedSlot : s)),
         );
       } else {
         setManageError(res.error || "Failed to free slot.");
@@ -374,7 +384,9 @@ export default function AdminSlotsPage() {
       setManageError(null);
       setManageSuccess(null);
 
-      const selectedType = slotTypes.find((t) => t.id === manualForm.slotTypeId);
+      const selectedType = slotTypes.find(
+        (t) => t.id === manualForm.slotTypeId,
+      );
 
       const res = await manualBookSlotAction({
         slotId: managingSlot.id,
@@ -389,7 +401,7 @@ export default function AdminSlotsPage() {
 
       if (res.success) {
         setManageSuccess(
-          `Slot booked successfully for ${manualForm.studentName}! Payment: ${manualForm.paymentMethod}.`
+          `Slot booked successfully for ${manualForm.studentName}! Payment: ${manualForm.paymentMethod}.`,
         );
         const updatedSlot: SlotItem = {
           ...managingSlot,
@@ -397,14 +409,15 @@ export default function AdminSlotsPage() {
           available: false,
           bookedBy: {
             name: manualForm.studentName.trim(),
-            email: manualForm.email.trim() || "walkin@fourseasonsdrivingschool.ca",
+            email:
+              manualForm.email.trim() || "walkin@fourseasonsdrivingschool.ca",
             phone: manualForm.phone.trim(),
             bookingId: res.bookingId,
           },
         };
         setManagingSlot(updatedSlot);
         setSlots((prev) =>
-          prev.map((s) => (s.id === managingSlot.id ? updatedSlot : s))
+          prev.map((s) => (s.id === managingSlot.id ? updatedSlot : s)),
         );
         resetManualForm();
       } else {
@@ -426,8 +439,8 @@ export default function AdminSlotsPage() {
         prev.map((s) =>
           s.id === slot.id
             ? { ...s, status: newStatus, available: newStatus === "available" }
-            : s
-        )
+            : s,
+        ),
       );
     } catch (err) {
       console.error("Failed to toggle slot status:", err);
@@ -500,7 +513,8 @@ export default function AdminSlotsPage() {
   };
 
   const handleDeleteSlotType = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete slot type: "${name}"?`)) return;
+    if (!confirm(`Are you sure you want to delete slot type: "${name}"?`))
+      return;
     try {
       await deleteSlotTypeAction(id);
       setSlotTypes((prev) => prev.filter((t) => t.id !== id));
@@ -519,7 +533,8 @@ export default function AdminSlotsPage() {
             Lesson Slots &amp; Types
           </h1>
           <p className="mt-1 text-sm text-zinc-500">
-            Manage scheduled lesson time slots, manually book appointments, and configure live slot types.
+            Manage scheduled lesson time slots, manually book appointments, and
+            configure live slot types.
           </p>
         </div>
 
@@ -613,10 +628,12 @@ export default function AdminSlotsPage() {
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-amber-950">
-                    {overlappingSlotIds.size} Contradicting / Overlapping Slots Detected
+                    {overlappingSlotIds.size} Contradicting / Overlapping Slots
+                    Detected
                   </h4>
                   <p className="text-[11px] text-amber-800">
-                    These slots have conflicting time intervals on the same day. You can bulk-select them for immediate cleanup.
+                    These slots have conflicting time intervals on the same day.
+                    You can bulk-select them for immediate cleanup.
                   </p>
                 </div>
               </div>
@@ -647,17 +664,20 @@ export default function AdminSlotsPage() {
                 >
                   <div
                     className={`h-3.5 w-3.5 rounded border flex items-center justify-center transition ${
-                      selectedSlotIds.length === availableSlots.length && availableSlots.length > 0
+                      selectedSlotIds.length === availableSlots.length &&
+                      availableSlots.length > 0
                         ? "bg-emerald-600 border-emerald-600 text-white"
                         : "border-zinc-400 bg-white"
                     }`}
                   >
-                    {selectedSlotIds.length === availableSlots.length && availableSlots.length > 0 && (
-                      <Check className="h-2.5 w-2.5 stroke-[3]" />
-                    )}
+                    {selectedSlotIds.length === availableSlots.length &&
+                      availableSlots.length > 0 && (
+                        <Check className="h-2.5 w-2.5 stroke-[3]" />
+                      )}
                   </div>
                   <span>
-                    {selectedSlotIds.length === availableSlots.length && availableSlots.length > 0
+                    {selectedSlotIds.length === availableSlots.length &&
+                    availableSlots.length > 0
                       ? "Deselect All"
                       : `Select All Available (${availableSlots.length})`}
                   </span>
@@ -668,7 +688,9 @@ export default function AdminSlotsPage() {
 
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-zinc-400" />
-                <span className="text-xs font-semibold text-zinc-700">Date:</span>
+                <span className="text-xs font-semibold text-zinc-700">
+                  Date:
+                </span>
                 <input
                   type="date"
                   value={filterDate}
@@ -707,7 +729,9 @@ export default function AdminSlotsPage() {
           ) : slots.length === 0 ? (
             <div className="rounded-2xl border border-zinc-200 bg-white p-12 text-center">
               <Calendar className="mx-auto h-12 w-12 text-zinc-300" />
-              <h3 className="mt-3 text-base font-bold text-zinc-900">No Slots Found</h3>
+              <h3 className="mt-3 text-base font-bold text-zinc-900">
+                No Slots Found
+              </h3>
               <p className="mt-1 text-xs text-zinc-500">
                 {filterDate
                   ? `No lesson slots scheduled for ${filterDate}.`
@@ -739,10 +763,10 @@ export default function AdminSlotsPage() {
                       isSelected
                         ? "border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 shadow-md"
                         : isOverlapping
-                        ? "border-rose-300 bg-rose-50/25 hover:border-rose-400 shadow-xs"
-                        : isAvailable
-                        ? "border-zinc-200 bg-white hover:border-zinc-300 shadow-xs"
-                        : "border-zinc-300 bg-zinc-50/80 shadow-xs cursor-default"
+                          ? "border-rose-300 bg-rose-50/25 hover:border-rose-400 shadow-xs"
+                          : isAvailable
+                            ? "border-zinc-200 bg-white hover:border-zinc-300 shadow-xs"
+                            : "border-zinc-300 bg-zinc-50/80 shadow-xs cursor-default"
                     }`}
                   >
                     <div>
@@ -769,7 +793,9 @@ export default function AdminSlotsPage() {
                                   : "border-zinc-300 bg-white hover:border-emerald-500"
                               }`}
                             >
-                              {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
+                              {isSelected && (
+                                <Check className="h-3 w-3 stroke-[3]" />
+                              )}
                             </button>
                           )}
 
@@ -806,8 +832,12 @@ export default function AdminSlotsPage() {
                       {/* Time */}
                       <div className="mt-3 flex items-center gap-2">
                         <Clock className="h-4 w-4 text-zinc-400" />
-                        <span className="text-sm font-bold text-zinc-900">{slot.time}</span>
-                        <span className="text-[11px] text-zinc-400 font-medium">({slot.duration})</span>
+                        <span className="text-sm font-bold text-zinc-900">
+                          {slot.time}
+                        </span>
+                        <span className="text-[11px] text-zinc-400 font-medium">
+                          ({slot.duration})
+                        </span>
                       </div>
 
                       {/* Booked Student Info if Booked */}
@@ -879,9 +909,12 @@ export default function AdminSlotsPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-zinc-950">Active Slot Types</h3>
+              <h3 className="text-base font-bold text-zinc-950">
+                Active Slot Types
+              </h3>
               <p className="text-xs text-zinc-500">
-                These slot types with their custom pricing are shown directly to students during online appointment booking.
+                These slot types with their custom pricing are shown directly to
+                students during online appointment booking.
               </p>
             </div>
 
@@ -902,9 +935,12 @@ export default function AdminSlotsPage() {
           ) : slotTypes.length === 0 ? (
             <div className="rounded-2xl border border-zinc-200 bg-white p-12 text-center">
               <Tag className="mx-auto h-12 w-12 text-zinc-300" />
-              <h3 className="mt-3 text-base font-bold text-zinc-900">No Slot Types</h3>
+              <h3 className="mt-3 text-base font-bold text-zinc-900">
+                No Slot Types
+              </h3>
               <p className="mt-1 text-xs text-zinc-500">
-                Add slot types like &quot;Standard 90-Min Lesson&quot; or &quot;Mock ICBC Test&quot;.
+                Add slot types like &quot;Standard 90-Min Lesson&quot; or
+                &quot;Mock Test&quot;.
               </p>
               <button
                 type="button"
@@ -940,7 +976,9 @@ export default function AdminSlotsPage() {
                       <span className="text-2xl font-extrabold text-zinc-950">
                         {type.price}
                       </span>
-                      <span className="text-xs text-zinc-500 font-medium">CAD</span>
+                      <span className="text-xs text-zinc-500 font-medium">
+                        CAD
+                      </span>
                     </div>
                   </div>
 
@@ -1028,8 +1066,14 @@ export default function AdminSlotsPage() {
                     </span>
                   </div>
                   <div className="text-xs text-zinc-600 space-y-0.5">
-                    <p>Phone: <strong>{managingSlot.bookedBy?.phone || "N/A"}</strong></p>
-                    <p>Email: <strong>{managingSlot.bookedBy?.email || "N/A"}</strong></p>
+                    <p>
+                      Phone:{" "}
+                      <strong>{managingSlot.bookedBy?.phone || "N/A"}</strong>
+                    </p>
+                    <p>
+                      Email:{" "}
+                      <strong>{managingSlot.bookedBy?.email || "N/A"}</strong>
+                    </p>
                     {managingSlot.bookedBy?.bookingId && (
                       <p className="text-[10px] font-mono text-zinc-400 pt-1">
                         Ref #{managingSlot.bookedBy.bookingId.slice(0, 8)}
@@ -1044,7 +1088,12 @@ export default function AdminSlotsPage() {
                   <div>
                     <p className="font-semibold">Slot Deletion is Protected</p>
                     <p className="mt-0.5 text-amber-800">
-                      Direct deletion of booked slots is disabled. To release this appointment, click <strong>&quot;Free Slot&quot;</strong> below. This will trigger a mock Stripe refund and revert the status to available, after which the slot can be deleted or re-booked.
+                      Direct deletion of booked slots is disabled. To release
+                      this appointment, click{" "}
+                      <strong>&quot;Free Slot&quot;</strong> below. This will
+                      trigger a mock Stripe refund and revert the status to
+                      available, after which the slot can be deleted or
+                      re-booked.
                     </p>
                   </div>
                 </div>
@@ -1070,7 +1119,11 @@ export default function AdminSlotsPage() {
                     ) : (
                       <Unlock className="h-4 w-4" />
                     )}
-                    <span>{freeingSlot ? "Processing Refund..." : "Free Slot (Refund & Release)"}</span>
+                    <span>
+                      {freeingSlot
+                        ? "Processing Refund..."
+                        : "Free Slot (Refund & Release)"}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -1082,17 +1135,25 @@ export default function AdminSlotsPage() {
                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                     <span>Slot is Available</span>
                   </div>
-                  <span className="text-[11px] text-emerald-700">Ready for booking</span>
+                  <span className="text-[11px] text-emerald-700">
+                    Ready for booking
+                  </span>
                 </div>
 
-                <form onSubmit={handleManualBookingSubmit} className="space-y-4">
+                <form
+                  onSubmit={handleManualBookingSubmit}
+                  className="space-y-4"
+                >
                   <p className="text-xs font-bold text-zinc-900 uppercase tracking-wider">
                     Manual Booking (On-Call / Walk-In)
                   </p>
 
                   {/* Student Name */}
                   <div>
-                    <label htmlFor="studentName" className="block text-xs font-semibold text-zinc-700">
+                    <label
+                      htmlFor="studentName"
+                      className="block text-xs font-semibold text-zinc-700"
+                    >
                       Student Full Name <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -1110,7 +1171,10 @@ export default function AdminSlotsPage() {
                   {/* Phone & Email */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label htmlFor="phone" className="block text-xs font-semibold text-zinc-700">
+                      <label
+                        htmlFor="phone"
+                        className="block text-xs font-semibold text-zinc-700"
+                      >
                         Phone Number <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -1126,7 +1190,10 @@ export default function AdminSlotsPage() {
                     </div>
 
                     <div>
-                      <label htmlFor="email" className="block text-xs font-semibold text-zinc-700">
+                      <label
+                        htmlFor="email"
+                        className="block text-xs font-semibold text-zinc-700"
+                      >
                         Email Address
                       </label>
                       <input
@@ -1143,7 +1210,10 @@ export default function AdminSlotsPage() {
 
                   {/* Slot Type Selection */}
                   <div>
-                    <label htmlFor="slotTypeId" className="block text-xs font-semibold text-zinc-700">
+                    <label
+                      htmlFor="slotTypeId"
+                      className="block text-xs font-semibold text-zinc-700"
+                    >
                       Lesson Slot Type
                     </label>
                     <select
@@ -1185,8 +1255,12 @@ export default function AdminSlotsPage() {
                         <div className="flex items-center gap-2">
                           <Banknote className="h-4 w-4 text-emerald-700" />
                           <div>
-                            <p className="text-xs font-bold text-zinc-900">Cash on spot</p>
-                            <p className="text-[10px] text-zinc-500">Pay instructor</p>
+                            <p className="text-xs font-bold text-zinc-900">
+                              Cash on spot
+                            </p>
+                            <p className="text-[10px] text-zinc-500">
+                              Pay instructor
+                            </p>
                           </div>
                         </div>
                       </label>
@@ -1209,8 +1283,12 @@ export default function AdminSlotsPage() {
                         <div className="flex items-center gap-2">
                           <CreditCard className="h-4 w-4 text-zinc-700" />
                           <div>
-                            <p className="text-xs font-bold text-zinc-900">Card (Mock)</p>
-                            <p className="text-[10px] text-zinc-500">Stripe charge</p>
+                            <p className="text-xs font-bold text-zinc-900">
+                              Card (Mock)
+                            </p>
+                            <p className="text-[10px] text-zinc-500">
+                              Stripe charge
+                            </p>
                           </div>
                         </div>
                       </label>
@@ -1219,7 +1297,10 @@ export default function AdminSlotsPage() {
 
                   {/* Notes */}
                   <div>
-                    <label htmlFor="notes" className="block text-xs font-semibold text-zinc-700">
+                    <label
+                      htmlFor="notes"
+                      className="block text-xs font-semibold text-zinc-700"
+                    >
                       Notes (Optional)
                     </label>
                     <input
@@ -1263,7 +1344,11 @@ export default function AdminSlotsPage() {
                         ) : (
                           <UserPlus className="h-3.5 w-3.5 text-emerald-400" />
                         )}
-                        <span>{bookingSlot ? "Booking..." : "Confirm Manual Booking"}</span>
+                        <span>
+                          {bookingSlot
+                            ? "Booking..."
+                            : "Confirm Manual Booking"}
+                        </span>
                       </button>
                     </div>
                   </div>
@@ -1300,7 +1385,10 @@ export default function AdminSlotsPage() {
             <form onSubmit={handleSaveSlotType} className="mt-4 space-y-4">
               {/* Slot Name */}
               <div>
-                <label htmlFor="name" className="block text-xs font-semibold text-zinc-900">
+                <label
+                  htmlFor="name"
+                  className="block text-xs font-semibold text-zinc-900"
+                >
                   Slot Type Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -1317,7 +1405,10 @@ export default function AdminSlotsPage() {
 
               {/* Price */}
               <div>
-                <label htmlFor="price" className="block text-xs font-semibold text-zinc-900">
+                <label
+                  htmlFor="price"
+                  className="block text-xs font-semibold text-zinc-900"
+                >
                   Price (CAD $) <span className="text-red-500">*</span>
                 </label>
                 <div className="relative mt-1">
@@ -1358,7 +1449,13 @@ export default function AdminSlotsPage() {
                   ) : (
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
                   )}
-                  <span>{savingType ? "Saving..." : editingTypeId ? "Update Slot Type" : "Create Slot Type"}</span>
+                  <span>
+                    {savingType
+                      ? "Saving..."
+                      : editingTypeId
+                        ? "Update Slot Type"
+                        : "Create Slot Type"}
+                  </span>
                 </button>
               </div>
             </form>
@@ -1376,7 +1473,8 @@ export default function AdminSlotsPage() {
               </div>
               <div>
                 <p className="text-xs font-bold leading-tight">
-                  {selectedSlotIds.length} slot{selectedSlotIds.length === 1 ? "" : "s"} selected
+                  {selectedSlotIds.length} slot
+                  {selectedSlotIds.length === 1 ? "" : "s"} selected
                 </p>
                 <button
                   type="button"
@@ -1411,11 +1509,13 @@ export default function AdminSlotsPage() {
             </div>
 
             <h3 className="text-base font-bold text-zinc-950">
-              Delete {selectedSlotIds.length} Time Slot{selectedSlotIds.length === 1 ? "" : "s"}?
+              Delete {selectedSlotIds.length} Time Slot
+              {selectedSlotIds.length === 1 ? "" : "s"}?
             </h3>
 
             <p className="mt-2 text-xs text-zinc-600 leading-relaxed">
-              This will permanently remove the selected slots from the schedule. Students will no longer be able to view or book them.
+              This will permanently remove the selected slots from the schedule.
+              Students will no longer be able to view or book them.
             </p>
 
             <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/80 p-3 text-xs text-emerald-900">
@@ -1424,7 +1524,8 @@ export default function AdminSlotsPage() {
                 <span>Safe Deletion Guarantee</span>
               </p>
               <p className="text-[11px] text-emerald-800 mt-0.5">
-                Any slot currently booked by a student is automatically preserved to protect active lessons.
+                Any slot currently booked by a student is automatically
+                preserved to protect active lessons.
               </p>
             </div>
 
@@ -1448,7 +1549,11 @@ export default function AdminSlotsPage() {
                 ) : (
                   <Trash2 className="h-3.5 w-3.5" />
                 )}
-                <span>{bulkDeleting ? "Deleting..." : `Yes, Delete ${selectedSlotIds.length} Slots`}</span>
+                <span>
+                  {bulkDeleting
+                    ? "Deleting..."
+                    : `Yes, Delete ${selectedSlotIds.length} Slots`}
+                </span>
               </button>
             </div>
           </div>
@@ -1457,4 +1562,3 @@ export default function AdminSlotsPage() {
     </div>
   );
 }
-

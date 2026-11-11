@@ -11,7 +11,10 @@ import {
   AlertCircle,
   Sparkles,
 } from "lucide-react";
-import { getSlotsAction, getAvailableSlotDatesAction } from "@/lib/actions/slots";
+import {
+  getSlotsAction,
+  getAvailableSlotDatesAction,
+} from "@/lib/actions/slots";
 
 export interface TimeSlot {
   id: string;
@@ -48,7 +51,7 @@ function getSlotsForDate(dateStr: string): TimeSlot[] {
         startTime: "09:00 AM",
         endTime: "10:30 AM",
         duration: "90 mins",
-        instructor: "Gary S. (Senior ICBC Trainer)",
+        instructor: "Gary S. (Senior   Trainer)",
         available: true,
         type: "Weekend",
       },
@@ -68,7 +71,7 @@ function getSlotsForDate(dateStr: string): TimeSlot[] {
         startTime: "01:30 PM",
         endTime: "03:00 PM",
         duration: "90 mins",
-        instructor: "Gary S. (Senior ICBC Trainer)",
+        instructor: "Gary S. (Senior   Trainer)",
         available: true,
         type: "Weekend",
       },
@@ -93,7 +96,7 @@ function getSlotsForDate(dateStr: string): TimeSlot[] {
       startTime: "08:30 AM",
       endTime: "10:00 AM",
       duration: "90 mins",
-      instructor: "Gary S. (Senior ICBC Trainer)",
+      instructor: "Gary S. (Senior   Trainer)",
       available: true,
       type: "Regular",
     },
@@ -123,7 +126,7 @@ function getSlotsForDate(dateStr: string): TimeSlot[] {
       startTime: "03:00 PM",
       endTime: "04:30 PM",
       duration: "90 mins",
-      instructor: "Gary S. (Senior ICBC Trainer)",
+      instructor: "Gary S. (Senior   Trainer)",
       available: true,
       type: "Peak",
     },
@@ -301,7 +304,7 @@ export default function SlotCalendar({
               instructor: s.instructor,
               available: s.status === "available",
               type: "Regular",
-            }))
+            })),
           );
         }
       } catch (err) {
@@ -437,8 +440,8 @@ export default function SlotCalendar({
                     isSelected
                       ? "bg-zinc-900 text-white font-bold shadow-md shadow-zinc-950/20 scale-[1.02]"
                       : isDisabled
-                      ? "text-zinc-300 bg-transparent cursor-not-allowed"
-                      : "text-zinc-800 hover:bg-emerald-50 hover:text-emerald-950 active:scale-95 bg-zinc-50/70"
+                        ? "text-zinc-300 bg-transparent cursor-not-allowed"
+                        : "text-zinc-800 hover:bg-emerald-50 hover:text-emerald-950 active:scale-95 bg-zinc-50/70"
                   } ${isToday && !isSelected ? "ring-1.5 ring-emerald-600 font-bold" : ""}`}
                 >
                   <span>{item.dayNum}</span>
@@ -447,7 +450,11 @@ export default function SlotCalendar({
                   {!isDisabled && item.isCurrentMonth && (
                     <span
                       className={`mt-1 h-1.5 w-1.5 rounded-full ${
-                        (liveDates.length > 0 ? liveDates.includes(item.dateStr) : true)
+                        (
+                          liveDates.length > 0
+                            ? liveDates.includes(item.dateStr)
+                            : true
+                        )
                           ? isSelected
                             ? "bg-emerald-400"
                             : "bg-emerald-500"
@@ -492,9 +499,12 @@ export default function SlotCalendar({
             ) : availableSlots.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center text-zinc-400">
                 <CalendarIcon className="h-8 w-8 mb-2 stroke-1 text-zinc-300" />
-                <p className="text-xs font-semibold text-zinc-700">No open slots on {formattedSelectedDate}</p>
+                <p className="text-xs font-semibold text-zinc-700">
+                  No open slots on {formattedSelectedDate}
+                </p>
                 <p className="text-[11px] text-zinc-400 mt-1 max-w-xs">
-                  Please choose a date marked with a green indicator to view available appointment times.
+                  Please choose a date marked with a green indicator to view
+                  available appointment times.
                 </p>
               </div>
             ) : (
@@ -555,7 +565,9 @@ export default function SlotCalendar({
                         <div className="flex items-center gap-2">
                           <p
                             className={`text-xs sm:text-sm font-bold ${
-                              isSlotSelected ? "text-emerald-950" : "text-zinc-900"
+                              isSlotSelected
+                                ? "text-emerald-950"
+                                : "text-zinc-900"
                             }`}
                           >
                             {slot.time}

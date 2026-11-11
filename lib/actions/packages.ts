@@ -2,7 +2,10 @@
 
 import { db } from "@/lib/firebase/firebase";
 import { revalidatePaths } from "@/lib/revalidatePath";
-import { generatePackagePurchaseEmail, logConfirmationEmail } from "@/lib/email";
+import {
+  generatePackagePurchaseEmail,
+  logConfirmationEmail,
+} from "@/lib/email";
 
 export interface PackageItem {
   id: string; // Always a genuine Firebase doc.id
@@ -27,7 +30,8 @@ const INITIAL_DEFAULT_PACKAGES: Omit<PackageItem, "id">[] = [
     numericPrice: 110,
     duration: "90 minutes",
     lessonsCount: 1,
-    description: "Ideal for initial skill evaluation, parking practice, or specific maneuver review.",
+    description:
+      "Ideal for initial skill evaluation, parking practice, or specific maneuver review.",
     features: [
       "One-on-one 90 min driving instruction",
       "Free home / school / work pickup",
@@ -43,12 +47,13 @@ const INITIAL_DEFAULT_PACKAGES: Omit<PackageItem, "id">[] = [
     numericPrice: 999,
     duration: "15 hours total",
     lessonsCount: 10,
-    description: "Comprehensive step-by-step driver education for confident first-time ICBC test pass.",
+    description:
+      "Comprehensive step-by-step driver education for confident first-time   test pass.",
     features: [
       "10 sessions of 90 min individual driving",
       "Free home pickup & drop-off in Surrey & Delta",
       "Highway, reverse stall & parallel parking",
-      "Full mock road test simulating ICBC criteria",
+      "Full mock road test simulating   criteria",
       "Flexible weekday & weekend scheduling",
     ],
     popular: true,
@@ -60,11 +65,12 @@ const INITIAL_DEFAULT_PACKAGES: Omit<PackageItem, "id">[] = [
     numericPrice: 230,
     duration: "Test Day Package",
     lessonsCount: 1,
-    description: "Warm-up lesson right before your test + school vehicle rental for your ICBC exam.",
+    description:
+      "Warm-up lesson right before your test + school vehicle rental for your   exam.",
     features: [
       "45–60 min pre-test warm-up driving lesson",
-      "Certified dual-brake car rental for ICBC exam",
-      "Instructor accompaniment to ICBC center",
+      "Certified dual-brake car rental for   exam",
+      "Instructor accompaniment to   center",
       "Drop-off back to your home after test",
     ],
     popular: false,
@@ -76,7 +82,8 @@ const INITIAL_DEFAULT_PACKAGES: Omit<PackageItem, "id">[] = [
     numericPrice: 525,
     duration: "7.5 hours total",
     lessonsCount: 5,
-    description: "Great for building core foundational driving habits and city road confidence.",
+    description:
+      "Great for building core foundational driving habits and city road confidence.",
     features: [
       "5 one-on-one 90 min sessions",
       "Free pickup & drop-off in Surrey & Delta",
@@ -92,10 +99,11 @@ const INITIAL_DEFAULT_PACKAGES: Omit<PackageItem, "id">[] = [
     numericPrice: 1280,
     duration: "18 hours + Road Test",
     lessonsCount: 12,
-    description: "Full novice package: 12 in-depth lessons plus test-day warm-up and car rental.",
+    description:
+      "Full novice package: 12 in-depth lessons plus test-day warm-up and car rental.",
     features: [
       "12 individual lessons (18 hours behind the wheel)",
-      "Car rental for ICBC road test included",
+      "Car rental for   road test included",
       "Pre-test warm-up lesson included",
       "Free door-to-door pickup & drop-off",
     ],
@@ -108,7 +116,8 @@ const INITIAL_DEFAULT_PACKAGES: Omit<PackageItem, "id">[] = [
     numericPrice: 210,
     duration: "3 hours total",
     lessonsCount: 2,
-    description: "Tailored for Class 5 drivers or newcomers wanting confidence on Canadian roads.",
+    description:
+      "Tailored for Class 5 drivers or newcomers wanting confidence on Canadian roads.",
     features: [
       "2 sessions of 90 min brush-up",
       "Focus on winter driving, highway, and parking",
@@ -137,7 +146,8 @@ async function ensureDefaultPackagesSeeded(): Promise<PackageItem[]> {
           description: d.description || "",
           features: Array.isArray(d.features) ? d.features : [],
           popular: Boolean(d.popular),
-          showOnHomepage: d.showOnHomepage !== undefined ? Boolean(d.showOnHomepage) : false,
+          showOnHomepage:
+            d.showOnHomepage !== undefined ? Boolean(d.showOnHomepage) : false,
           createdAt: d.createdAt,
           updatedAt: d.updatedAt,
         });
@@ -220,7 +230,9 @@ export async function getHomepagePackagesAction(): Promise<PackageItem[]> {
 
     // If less than 3 are explicitly marked, supplement from all packages
     if (homepageList.length < 3) {
-      const remaining = all.filter((p) => !homepageList.some((h) => h.id === p.id));
+      const remaining = all.filter(
+        (p) => !homepageList.some((h) => h.id === p.id),
+      );
       homepageList = [...homepageList, ...remaining].slice(0, 3);
     } else if (homepageList.length > 3) {
       homepageList = homepageList.slice(0, 3);
@@ -229,7 +241,9 @@ export async function getHomepagePackagesAction(): Promise<PackageItem[]> {
     // Arrange with popular in center: [regular, popular, regular]
     const currentPopular = homepageList.find((p) => p.popular) || popularItem;
     if (currentPopular) {
-      const nonPopularItems = homepageList.filter((p) => p.id !== currentPopular.id);
+      const nonPopularItems = homepageList.filter(
+        (p) => p.id !== currentPopular.id,
+      );
       if (nonPopularItems.length >= 2) {
         return [nonPopularItems[0], currentPopular, nonPopularItems[1]];
       }
@@ -249,7 +263,9 @@ export async function getHomepagePackagesAction(): Promise<PackageItem[]> {
 /**
  * Fetch a single package by its Firebase doc.id
  */
-export async function getPackageByIdAction(id: string): Promise<PackageItem | null> {
+export async function getPackageByIdAction(
+  id: string,
+): Promise<PackageItem | null> {
   try {
     if (!id) return null;
     const doc = await db.collection("packages").doc(id).get();
@@ -290,7 +306,10 @@ async function unmarkOtherPopularPackages(excludeId?: string) {
     const batch = db.batch();
     popularSnapshot.forEach((doc) => {
       if (doc.id !== excludeId) {
-        batch.update(doc.ref, { popular: false, updatedAt: new Date().toISOString() });
+        batch.update(doc.ref, {
+          popular: false,
+          updatedAt: new Date().toISOString(),
+        });
       }
     });
     await batch.commit();
@@ -306,12 +325,14 @@ async function unmarkOtherPopularPackages(excludeId?: string) {
  * - Marked as popular auto-marks as showOnHomepage
  */
 export async function createPackageAction(
-  data: Omit<PackageItem, "id" | "createdAt" | "updatedAt">
+  data: Omit<PackageItem, "id" | "createdAt" | "updatedAt">,
 ): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
     const docRef = db.collection("packages").doc(); // Always generate doc.id
     const numericPrice = Number(data.numericPrice) || 0;
-    const formattedPrice = data.price?.startsWith("$") ? data.price : `$${numericPrice}`;
+    const formattedPrice = data.price?.startsWith("$")
+      ? data.price
+      : `$${numericPrice}`;
     const now = new Date().toISOString();
 
     const isPopular = Boolean(data.popular);
@@ -339,7 +360,10 @@ export async function createPackageAction(
     return { success: true, id: docRef.id };
   } catch (error: any) {
     console.error("createPackageAction error:", error);
-    return { success: false, error: error?.message || "Failed to create package" };
+    return {
+      success: false,
+      error: error?.message || "Failed to create package",
+    };
   }
 }
 
@@ -351,7 +375,7 @@ export async function createPackageAction(
  */
 export async function updatePackageAction(
   id: string,
-  data: Partial<Omit<PackageItem, "id">>
+  data: Partial<Omit<PackageItem, "id">>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     if (!id) throw new Error("Missing package doc.id");
@@ -387,14 +411,19 @@ export async function updatePackageAction(
     return { success: true };
   } catch (error: any) {
     console.error("updatePackageAction error:", error);
-    return { success: false, error: error?.message || "Failed to update package" };
+    return {
+      success: false,
+      error: error?.message || "Failed to update package",
+    };
   }
 }
 
 /**
  * Delete a package by its Firebase doc.id
  */
-export async function deletePackageAction(id: string): Promise<{ success: boolean; error?: string }> {
+export async function deletePackageAction(
+  id: string,
+): Promise<{ success: boolean; error?: string }> {
   try {
     if (!id) throw new Error("Missing package doc.id");
     await db.collection("packages").doc(id).delete();
@@ -402,7 +431,10 @@ export async function deletePackageAction(id: string): Promise<{ success: boolea
     return { success: true };
   } catch (error: any) {
     console.error("deletePackageAction error:", error);
-    return { success: false, error: error?.message || "Failed to delete package" };
+    return {
+      success: false,
+      error: error?.message || "Failed to delete package",
+    };
   }
 }
 
@@ -435,11 +467,14 @@ export interface PurchasePackagePayload {
  * - Dispatches and logs confirmation email via /lib/email
  */
 export async function purchasePackageAction(
-  data: PurchasePackagePayload
+  data: PurchasePackagePayload,
 ): Promise<{ success: boolean; orderId?: string; error?: string }> {
   try {
     if (!data.email?.trim() || !data.phone?.trim()) {
-      return { success: false, error: "Email address and contact phone number are required." };
+      return {
+        success: false,
+        error: "Email address and contact phone number are required.",
+      };
     }
     if (!data.firstName?.trim() || !data.lastName?.trim()) {
       return { success: false, error: "First and last name are required." };
@@ -503,7 +538,10 @@ export async function purchasePackageAction(
     return { success: true, orderId: docRef.id };
   } catch (error: any) {
     console.error("purchasePackageAction error:", error);
-    return { success: false, error: error?.message || "Failed to process package purchase." };
+    return {
+      success: false,
+      error: error?.message || "Failed to process package purchase.",
+    };
   }
 }
 
@@ -551,8 +589,11 @@ export async function getPackageOrdersAction(): Promise<PackageOrderItem[]> {
     const orders: PackageOrderItem[] = [];
     snapshot.forEach((doc) => {
       const d = doc.data();
-      const isPaid = d.paymentStatus === "paid" || Boolean(d.paymentIntentId) || Boolean(d.paidAt);
-      
+      const isPaid =
+        d.paymentStatus === "paid" ||
+        Boolean(d.paymentIntentId) ||
+        Boolean(d.paidAt);
+
       // Packages can only be purchased online. Only include paid packages.
       if (isPaid) {
         orders.push({
@@ -564,7 +605,10 @@ export async function getPackageOrdersAction(): Promise<PackageOrderItem[]> {
           numericPrice: d.numericPrice || 0,
           duration: d.duration || "",
           lessonsCount: d.lessonsCount || 1,
-          customerName: d.customerName || `${d.firstName || ""} ${d.lastName || ""}`.trim() || "Customer",
+          customerName:
+            d.customerName ||
+            `${d.firstName || ""} ${d.lastName || ""}`.trim() ||
+            "Customer",
           firstName: d.firstName || "",
           lastName: d.lastName || "",
           email: d.email || "",
@@ -597,7 +641,9 @@ export async function getPackageOrdersAction(): Promise<PackageOrderItem[]> {
 /**
  * Fetch a single package order by ID
  */
-export async function getPackageOrderByIdAction(orderId: string): Promise<PackageOrderItem | null> {
+export async function getPackageOrderByIdAction(
+  orderId: string,
+): Promise<PackageOrderItem | null> {
   try {
     if (!orderId) return null;
     const doc = await db.collection("package_orders").doc(orderId).get();
@@ -613,7 +659,10 @@ export async function getPackageOrderByIdAction(orderId: string): Promise<Packag
       numericPrice: d.numericPrice || 0,
       duration: d.duration || "",
       lessonsCount: d.lessonsCount || 1,
-      customerName: d.customerName || `${d.firstName || ""} ${d.lastName || ""}`.trim() || "Customer",
+      customerName:
+        d.customerName ||
+        `${d.firstName || ""} ${d.lastName || ""}`.trim() ||
+        "Customer",
       firstName: d.firstName || "",
       lastName: d.lastName || "",
       email: d.email || "",
@@ -650,17 +699,20 @@ export async function markPackageOrderPaidAction(params: {
     if (!params.orderId) throw new Error("Missing package order ID");
     const now = new Date().toISOString();
 
-    await db.collection("package_orders").doc(params.orderId).set(
-      {
-        status: "Online",
-        paymentStatus: "paid",
-        paymentMethod: "stripe_card",
-        paymentIntentId: params.paymentIntentId || "",
-        cardLast4: params.cardLast4 || "",
-        paidAt: now,
-      },
-      { merge: true }
-    );
+    await db
+      .collection("package_orders")
+      .doc(params.orderId)
+      .set(
+        {
+          status: "Online",
+          paymentStatus: "paid",
+          paymentMethod: "stripe_card",
+          paymentIntentId: params.paymentIntentId || "",
+          cardLast4: params.cardLast4 || "",
+          paidAt: now,
+        },
+        { merge: true },
+      );
 
     await revalidatePaths([
       "/",
@@ -673,6 +725,9 @@ export async function markPackageOrderPaidAction(params: {
     return { success: true };
   } catch (error: any) {
     console.error("markPackageOrderPaidAction error:", error);
-    return { success: false, error: error?.message || "Failed to update package order status" };
+    return {
+      success: false,
+      error: error?.message || "Failed to update package order status",
+    };
   }
 }

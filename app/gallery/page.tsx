@@ -7,9 +7,10 @@ import { Loader2, Sparkles, Award, ShieldCheck, Car } from "lucide-react";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Photo Gallery | Student Passes & Safety Fleet | Four Seasons Driving School Surrey",
+  title:
+    "Photo Gallery | Student Passes & Safety Fleet | Four Seasons Driving School Surrey",
   description:
-    "View our student ICBC road test passes, certified dual-brake training vehicles, and professional driving lessons across Surrey, Delta, and Langley, BC.",
+    "View our student   road test passes, certified dual-brake training vehicles, and professional driving lessons across Surrey, Delta, and Langley, BC.",
 };
 
 async function GalleryDataWrapper() {
@@ -30,14 +31,16 @@ export default function GalleryPage() {
             <div className="mx-auto max-w-3xl text-center">
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-50 px-4 py-1.5 text-xs font-semibold text-emerald-800 shadow-xs">
                 <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
-                <span>ICBC Student Passes &amp; Certified Safety Fleet</span>
+                <span> Student Passes &amp; Certified Safety Fleet</span>
               </div>
 
               <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-zinc-950 sm:text-5xl">
                 Driving School Photo Gallery
               </h1>
               <p className="mt-4 text-base sm:text-lg leading-relaxed text-zinc-600">
-                Celebrate authentic road test pass moments with our students, explore our modern dual-brake training vehicles, and see real in-car instruction across Surrey, Delta, and Langley.
+                Celebrate authentic road test pass moments with our students,
+                explore our modern dual-brake training vehicles, and see real
+                in-car instruction across Surrey, Delta, and Langley.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-xs font-medium text-zinc-600">
@@ -65,7 +68,9 @@ export default function GalleryPage() {
               fallback={
                 <div className="flex flex-col items-center justify-center py-28 text-zinc-400">
                   <Loader2 className="h-8 w-8 animate-spin text-zinc-800" />
-                  <p className="mt-3 text-xs font-semibold text-zinc-600">Loading photo gallery...</p>
+                  <p className="mt-3 text-xs font-semibold text-zinc-600">
+                    Loading photo gallery...
+                  </p>
                 </div>
               }
             >
@@ -84,7 +89,9 @@ export default function GalleryPage() {
               Ready to be our next road test pass celebration?
             </h2>
             <p className="text-sm sm:text-base text-zinc-300 max-w-2xl mx-auto leading-relaxed">
-              Join hundreds of happy drivers who passed their Class 7 &amp; Class 5 ICBC road tests with Four Seasons Driving School. Complimentary doorstep pickup across Surrey, Delta, and Langley.
+              Join hundreds of happy drivers who passed their Class 7 &amp;
+              Class 5 road tests with Four Seasons Driving School. Complimentary
+              doorstep pickup across Surrey, Delta, and Langley.
             </p>
 
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">

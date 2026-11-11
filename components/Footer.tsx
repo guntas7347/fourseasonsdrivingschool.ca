@@ -18,8 +18,8 @@ export default function Footer() {
               </span>
             </div>
             <p className="max-w-sm text-sm leading-relaxed text-zinc-400">
-              ICBC certified driving school offering top-rated driver training
-              in Surrey, Delta, Langley, and surrounding Metro Vancouver
+              certified driving school offering top-rated driver training in
+              Surrey, Delta, Langley, and surrounding Metro Vancouver
               communities. Patient, defensive, and focused on first-time road
               test success.
             </p>
@@ -156,11 +156,17 @@ export default function Footer() {
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-zinc-900 pt-8 text-xs text-zinc-500 sm:flex-row">
           <p>&copy; 2026 Four Seasons Driving School. All rights reserved.</p>
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-zinc-500">
-            <Link href="/policy" className="hover:text-zinc-300 transition-colors">
+            <Link
+              href="/policy"
+              className="hover:text-zinc-300 transition-colors"
+            >
               School Policy &amp; Terms
             </Link>
             <span>&bull;</span>
-            <Link href="/privacy" className="hover:text-zinc-300 transition-colors">
+            <Link
+              href="/privacy"
+              className="hover:text-zinc-300 transition-colors"
+            >
               Privacy Policy
             </Link>
           </div>
